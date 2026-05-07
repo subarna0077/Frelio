@@ -95,7 +95,7 @@ const ProtectedRoute = ({ children }) => {
 
 > See diagram: `docs/images/frelio-erd.png`
 
-![Frelio ERD](./images/frelio-erd.png)
+![ERD](./images/frelio-erd.png)
 
 ### `db.json` schema
 
