@@ -13,6 +13,8 @@ import type { LoginDataType } from '../types/auth'
 import { LoginFormSchema } from '../types/auth'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useLogin } from '../hooks/useLogin'
+import { useAuthStore } from '../stores/authStore'
+import {useEffect} from 'react'
 export const Login = () => {
 
   const { reset, register, handleSubmit, formState: {
@@ -22,6 +24,7 @@ export const Login = () => {
   })
 
   const {mutate: login} = useLogin()
+  const isAuthenticated = useAuthStore((state)=> state.isAuthenticated)
 
   const navigate = useNavigate()
 
@@ -30,6 +33,11 @@ export const Login = () => {
     navigate('/dashboard')
     reset()
   }
+
+  useEffect(()=>{
+    if(isAuthenticated) navigate('/dashboard')
+
+  }, [isAuthenticated, navigate])
 
   return (
     <Box component="form"
