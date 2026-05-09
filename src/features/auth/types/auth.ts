@@ -25,5 +25,5 @@ export type RegisterDataType = z.infer<typeof RegisterFormSchema>
 export interface User {
     email: string;
     name: string;
-    id: number;
+    id: string;
 }
