@@ -13,12 +13,15 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRegister } from '../hooks/useRegister'
 
+// supabase Hello@$123_45
+
 export const Register = () => {
     const { register, handleSubmit, formState: {
         errors
     } } = useForm<RegisterDataType>({
         resolver: zodResolver(RegisterFormSchema)
     })
+
     const {mutate: registerFn} = useRegister()
 
     const onSubmit = (data: RegisterDataType) => {

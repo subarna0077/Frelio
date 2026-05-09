@@ -3,6 +3,7 @@ import { Login } from '../features/auth/pages/Login'
 import { Register } from '../features/auth/pages/Register'
 import { ProtectedRoute } from '../shared/components/ProtectedRoute'
 import { Dashboard } from '../features/dashboard/pages/Dashboard'
+import { Projects } from '../features/projects/pages/Projects'
 
 export const AppRouter = () => {
 
@@ -18,6 +19,8 @@ export const AppRouter = () => {
 
             <Route path='/dashboard' element={<ProtectedRoute><Dashboard /></ProtectedRoute>
             }></Route>
+
+            <Route path='/projects' element={<ProtectedRoute><Projects/></ProtectedRoute>}></Route>
 
 
         </Routes>

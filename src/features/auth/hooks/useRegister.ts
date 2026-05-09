@@ -1,34 +1,32 @@
-import {useMutation} from '@tanstack/react-query'
-import type{ RegisterDataType } from '../types/auth'
+import { useMutation } from '@tanstack/react-query'
+import type { RegisterDataType } from '../types/auth'
+import { supabase } from '../../../lib/supabase'
+import {useNavigate} from 'react-router-dom'
 
-export const useRegister = ()=>{
+export const useRegister = () => {
+    const navigate = useNavigate()
+
+    const registerFn = async (data: RegisterDataType) => {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+            email: data.email,
+            password: data.password,
+            options: {
+                data: {
+                    full_name: data.name
+                }
+            }
+        });
+
+        if (authError) throw authError;
+        console.log(authData)
+
+        return authData     
+    }
 
     return useMutation({
-        mutationFn: async(data: RegisterDataType)=>{
-
-            const {confirmPassword, ...userData} = data;
-            const response = await fetch('http://localhost:3001/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(userData)
-            })
-
-            const result = await response.json();
-            console.log(result)
-
-            if(!response.ok) {
-                throw new Error(result || 'Login failed')
-            }
-            return result;
-
-
+        mutationFn: registerFn,
+        onSuccess: ()=>{
+            navigate('/dashboard')
         }
     })
-
-
-
-
-   
 }

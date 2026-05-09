@@ -7,14 +7,14 @@ import {
   Paper
 } from '@mui/material'
 
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import type { LoginDataType } from '../types/auth'
 import { LoginFormSchema } from '../types/auth'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useLogin } from '../hooks/useLogin'
 import { useAuthStore } from '../stores/authStore'
-import {useEffect} from 'react'
+
+import { useLogin } from '../hooks/useLogin'
 export const Login = () => {
 
   const { reset, register, handleSubmit, formState: {
@@ -23,21 +23,15 @@ export const Login = () => {
     resolver: zodResolver(LoginFormSchema)
   })
 
-  const {mutate: login} = useLogin()
+  const {mutate: loginFn} = useLogin()
+
   const isAuthenticated = useAuthStore((state)=> state.isAuthenticated)
 
-  const navigate = useNavigate()
-
   const onSubmit = (data: LoginDataType) => {
-    login(data)
-    navigate('/dashboard')
-    reset()
+    loginFn(data)
   }
 
-  useEffect(()=>{
-    if(isAuthenticated) navigate('/dashboard')
-
-  }, [isAuthenticated, navigate])
+  if(isAuthenticated) return <Navigate to="/dashboard"/>
 
   return (
     <Box component="form"
