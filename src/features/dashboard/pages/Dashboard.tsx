@@ -1,12 +1,15 @@
 
-import { useAuthStore } from '../../auth/stores/authStore'
-
+import { Button, Box } from '@mui/material'
+import { AddClientModal } from '../../clients/components/AddClientModal'
+import { useClientStore } from '../../clients/stores/ClientStore'
 export const Dashboard = () => {
-    const {user} = useAuthStore()
+  const setOpenModal = useClientStore(state => state.setOpenModal)
+  const openModal = useClientStore(state=> state.openModal)
   return (
-    <div>
-        Welcome to dashboard, {user?.name}
-    </div>
+    <Box>
+      <Button onClick={() => setOpenModal(true)}>Create new client</Button>
+     {openModal && <AddClientModal />}
+    </Box>
   )
 }
 
