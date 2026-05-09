@@ -7,6 +7,7 @@ export interface AuthStore {
     user: User | null;
     token: string;
     setUser: (user: User, token: string) => void;
+    logout: ()=> void;
 }
 
 export const useAuthStore = create<AuthStore>()(persist(
@@ -18,7 +19,8 @@ export const useAuthStore = create<AuthStore>()(persist(
             user,
             token,
             isAuthenticated: true
-        })
+        }),
+        logout: ()=> set({user:null, token:'', isAuthenticated:false})
     }), {
     name: 'auth-storage',
     partialize: (state) => ({
