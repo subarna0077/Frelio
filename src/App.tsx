@@ -1,10 +1,9 @@
-import {Typography} from '@mui/material'
+import { AppRouter } from './router/AppRouter'
 function App() {
-
-
   return (
     <>
-      <Typography>Hello world</Typography>    
+    <AppRouter></AppRouter>
+       
     </>
   )
 }
