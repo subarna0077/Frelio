@@ -16,6 +16,7 @@ dropdown of the projects section.
 import {useQuery} from '@tanstack/react-query'
 import { supabase } from '../../../lib/supabase'
 import { useAuthStore } from '../../auth/stores/authStore'
+import type { Client } from '../types/types'
 
 export const useGetClients = ()=>{
 
@@ -29,7 +30,7 @@ export const useGetClients = ()=>{
 
     }
 
-    return useQuery({
+    return useQuery<Client[]>({
         queryFn: getClient,
         queryKey: ['clients'],
     })
