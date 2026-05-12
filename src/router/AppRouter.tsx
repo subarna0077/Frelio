@@ -4,6 +4,8 @@ import { Register } from '../features/auth/pages/Register'
 import { ProtectedRoute } from '../shared/components/ProtectedRoute'
 import { Dashboard } from '../features/dashboard/pages/Dashboard'
 import { Projects } from '../features/projects/pages/Projects'
+import { SingleProject } from '../features/projects/pages/SingleProject'
+import { ClientsPage } from '../features/clients/pages/ClientsPage'
 
 export const AppRouter = () => {
 
@@ -20,9 +22,12 @@ export const AppRouter = () => {
             <Route path='/dashboard' element={<ProtectedRoute><Dashboard /></ProtectedRoute>
             }></Route>
 
-            <Route path='/projects' element={<ProtectedRoute><Projects/></ProtectedRoute>}></Route>
+             <Route path='/clients' element={<ProtectedRoute><ClientsPage /></ProtectedRoute>
+            }></Route>
 
+            <Route path='/projects' element={<ProtectedRoute><Projects /></ProtectedRoute>}></Route>
 
+            <Route path='/projects/:id' element={<ProtectedRoute><SingleProject /></ProtectedRoute>}></Route>
         </Routes>
 
     )
