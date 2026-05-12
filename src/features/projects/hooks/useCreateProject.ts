@@ -5,7 +5,6 @@ import { useAuthStore } from '../../auth/stores/authStore'
 
 export const useCreateProject = (clientID: string) => {
     const user = useAuthStore(state=> state.user);
-
     const queryClient = useQueryClient()
    
     const createProject = async (data: ProjectDataType)=> {
