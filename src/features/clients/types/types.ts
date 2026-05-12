@@ -1,4 +1,5 @@
 import {z} from 'zod'
+import type { Project } from '../../projects/types/types'
 
 export const ClientAddSchema = z.object({
   name: z.string().min(6, 'Enter full client name'),
@@ -15,4 +16,5 @@ export type Client = {
   id: string
   user_id: string
   created_at: string
+  projects: Pick<Project, 'id' | 'title' | 'status'| 'created_at'>[]
 }

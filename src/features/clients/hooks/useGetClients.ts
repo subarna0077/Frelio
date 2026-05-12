@@ -24,10 +24,15 @@ export const useGetClients = ()=>{
 
     const getClient = async()=> {
         // in order to get the clients of the curren
-        const {data, error} = await supabase.from('clients').select('*').eq('user_id',user?.id)
+        const {data, error} = await supabase.from('clients').select(`*, projects(
+            id,
+            title,
+            status,
+            created_at
+            )`).eq('user_id',user?.id)
         if(error) throw error;
+        console.log(data)
         return data;
-
     }
 
     return useQuery<Client[]>({
