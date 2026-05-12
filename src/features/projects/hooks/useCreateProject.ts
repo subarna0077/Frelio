@@ -1,10 +1,12 @@
-import {useMutation} from '@tanstack/react-query'
+import {useMutation, useQueryClient} from '@tanstack/react-query'
 import { supabase } from '../../../lib/supabase'
 import type { ProjectDataType } from '../types/types'
 import { useAuthStore } from '../../auth/stores/authStore'
 
 export const useCreateProject = (clientID: string) => {
     const user = useAuthStore(state=> state.user);
+
+    const queryClient = useQueryClient()
    
     const createProject = async (data: ProjectDataType)=> {
         const {data: projectData, error} = await supabase.from('projects').insert({
@@ -22,10 +24,11 @@ export const useCreateProject = (clientID: string) => {
         mutationFn: createProject,
         onSuccess: (data)=> {
             console.log(data)
+            queryClient.invalidateQueries({queryKey: ['projects']})
         },
         onError: (error)=> {
             console.log(error)
-        }
+        },
     })
 
 }
