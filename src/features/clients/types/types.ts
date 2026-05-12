@@ -7,3 +7,12 @@ export const ClientAddSchema = z.object({
 })
 
 export type ClientFormType = z.infer<typeof ClientAddSchema>
+
+export type Client = {
+  name: string
+  address:string
+  phone:string
+  id: string
+  user_id: string
+  created_at: string
+}
