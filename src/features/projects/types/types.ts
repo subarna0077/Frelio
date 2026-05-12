@@ -1,4 +1,5 @@
 import {z} from 'zod'
+import type { Client } from '../../clients/types/types'
 
 export const AddProjectSchema = z.object({
     title: z.string().min(8, 'Add a detailed title.'),
@@ -6,3 +7,13 @@ export const AddProjectSchema = z.object({
 })
 
 export type ProjectDataType = z.infer<typeof AddProjectSchema>
+
+export type Project = {
+    id: string
+    user_id: string
+    client_id: string
+    title: string
+    status: string
+    created_at: string
+    clients: Pick<Client, 'id' | 'name' | 'phone'> | null
+}
