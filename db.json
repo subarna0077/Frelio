@@ -6,5 +6,15 @@
       "name": "Subarna Sapkota",
       "id": 1
     }
-  ]
+  ],
+  "clients": [
+    {
+      "name": "Subarna Sapkota",
+      "address": "kawasoti",
+      "phone": 9805148029,
+      "userId": 1,
+      "id": 1
+    }
+  ],
+  "projects": []
 }
