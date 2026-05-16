@@ -4,7 +4,7 @@ import {useMutation, useQueryClient} from '@tanstack/react-query'
 import { supabase } from "../../../lib/supabase";
 import { useAuthStore } from "../../auth/stores/authStore";
 
-export const useCreateMilestone = (project_id: string)=>{
+export const useCreateMilestone = (project_id: string | undefined)=>{
     const {user} = useAuthStore()
     const queryClient = useQueryClient()
 

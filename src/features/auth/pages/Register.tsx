@@ -1,109 +1,102 @@
-
+import React, { useState, useEffect } from 'react';
 import {
-    Box,
-    TextField,
-    Button,
-    Typography,
-    Paper
-} from '@mui/material'
-
-import { Link } from 'react-router-dom'
-import { type RegisterDataType, RegisterFormSchema } from '../types/auth'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useRegister } from '../hooks/useRegister'
-
-// supabase Hello@$123_45
+    Box, Card, CardContent, TextField, Button, Typography,
+    Link, MenuItem, CircularProgress, Divider,
+} from '@mui/material';
+import { BoltRounded } from '@mui/icons-material';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { RegisterFormSchema } from '../types/auth';
+import type { RegisterDataType } from '../types/auth';
+import { useForm, Controller } from 'react-hook-form'
+import { useRegister } from '../hooks/useRegister';
+import {toast} from 'react-hot-toast'
 
 export const Register = () => {
-    const { register, handleSubmit, formState: {
-        errors
-    } } = useForm<RegisterDataType>({
-        resolver: zodResolver(RegisterFormSchema)
-    })
+    const navigate = useNavigate();
 
-    const {mutate: registerFn} = useRegister()
+    const { register, control, handleSubmit, reset } = useForm<RegisterDataType>();
+
+    const { mutate: registerFn, error, isError, isPending } = useRegister()
 
     const onSubmit = (data: RegisterDataType) => {
         registerFn(data)
-    }
+    };
+
+    useEffect(()=>{
+        if(error && isError){
+            toast(error.message)
+        }
+
+    }, [])
+
+
 
     return (
-        <Box component='form' onSubmit={handleSubmit(onSubmit)}
-            sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                minHeight: "100vh"
+        <Box sx={{
+            minHeight: '100vh', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', bgcolor: '#F5F7FA', p: 2,
+        }}>
+            <Box sx={{ width: '100%', maxWidth: 460 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 4, justifyContent: 'center' }}>
+                    <Box sx={{ width: 40, height: 40, borderRadius: 2.5, bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <BoltRounded sx={{ color: '#fff', fontSize: 22 }} />
+                    </Box>
+                    <Typography variant="h5" fontWeight={800} letterSpacing="-0.5px">Frelio</Typography>
+                </Box>
 
-            }}
-        >
-            <Paper
-                elevation={3}
-                sx={{
-                    padding: 4,
-                    width: 350,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2
-                }}
-            >
-                <Typography variant="h5" sx={{ textAlign: "center" }}>
-                    Register
-                </Typography>
+                <Card elevation={0}>
+                    <CardContent sx={{ p: 4 }}>
+                        <Typography variant="h5" fontWeight={700} mb={0.5}>Create your account</Typography>
+                        <Typography variant="body2" color="text.secondary" mb={3}>
+                            Start managing your freelance business for free
+                        </Typography>
 
-                <TextField
-                    label="Full Name"
-                    variant="outlined"
-                    fullWidth
-                    {...register('name')}
-                    error={!!errors.name}
-                    helperText={errors?.name?.message}
-                />
+                        <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <TextField label="Full name *" fullWidth {...register('name')} />
+                            <TextField label="Email address *" type="email" fullWidth {...register('email')} />
+                            <TextField label="Password *" type="password" fullWidth {...register('password')} />
+                            <TextField label="Confirm Password *" type="password" fullWidth {...register('confirmPassword')} />
 
-                <TextField
-                    label="Email"
-                    type="email"
-                    variant="outlined"
-                    fullWidth
-                    {...register('email')}
-                     error={!!errors.email}
-                    helperText={errors?.email?.message}
-                />
+                            <Divider sx={{ my: 0.5 }}>
+                                <Typography variant="caption" color="text.secondary">Optional details</Typography>
+                            </Divider>
 
-                <TextField
-                    label="Password"
-                    type="password"
-                    variant="outlined"
-                    fullWidth
-                    {...register('password')}
-                    error={!!errors.password}
-                    helperText={errors?.password?.message}
-                />
+                            <TextField label="Business name" fullWidth {...register('businessName')} />
+                            <TextField label="PAN number" fullWidth {...register('panNumber')} />
 
-                <TextField
-                    label="Confirm Password"
-                    type="password"
-                    variant="outlined"
-                    fullWidth
-                    {...register('confirmPassword')}
-                    error={!!errors.confirmPassword}
-                    helperText={errors?.confirmPassword?.message}
-                />
+                            <Controller
+                                name='currency'
+                                control={control}
+                                render={({ field }) => (
+                                    <TextField {...field} select label='Default currency' fullWidth>
+                                        <MenuItem value="NPR"> NPR - Nepali rupee</MenuItem>
+                                        <MenuItem value="USD">USD - US Dollar</MenuItem>
+                                    </TextField>
+                                )}
+                            >
 
-                <Button
-                    variant="contained"
-                    fullWidth
-                    size="large"
-                    type='submit'
-                >
-                    Register
-                </Button>
+                            </Controller>
 
-                <Typography variant="body2" sx={{ textAlign: "center" }}>
-                    Already have an account? <Link to='/login'>Login</Link>
-                </Typography>
-            </Paper>
+
+                            <Button
+                                type="submit" variant="contained" size="large" fullWidth
+                                sx={{ mt: 1, py: 1.25 }}
+                            >
+                                Create account
+                                {/* {loading ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Create account'} */}
+                            </Button>
+                        </Box>
+
+                        <Typography variant="body2" textAlign="center" mt={3} color="text.secondary">
+                            Already have an account?{' '}
+                            <Link component={RouterLink} to="/login" fontWeight={600} color="primary.main" underline="hover">
+                                Sign in
+                            </Link>
+                        </Typography>
+                    </CardContent>
+                </Card>
+            </Box>
         </Box>
-    )
-}
+    );
+};
+

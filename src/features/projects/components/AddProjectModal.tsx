@@ -4,11 +4,18 @@ import { type ProjectDataType, AddProjectSchema } from '../types/types'
 import { useProjectStore } from '../stores/ProjectStore'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useGetClients } from '../../clients/hooks/useGetClients'
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 import {type SelectChangeEvent} from '@mui/material/Select'
 import { useCreateProject } from '../hooks/useCreateProject'
+import { useEditProject } from '../hooks/useEditProject'
 
-export const AddProjectModal = () => {
+export interface AddProjectModalProps {
+    project_id: string | undefined;
+    initialData?: ProjectDataType
+
+}
+
+export const AddProjectModal = ({project_id, initialData}: AddProjectModalProps) => {
     const openModal = useProjectStore(state => state.openModal) // first state it is false
     const setOpenModal = useProjectStore(state => state.setOpenModal) // this is function
     const [clientId, setClientId] = useState<string>('') // ''
@@ -18,6 +25,8 @@ export const AddProjectModal = () => {
     }
 
     const {mutate: createProject} = useCreateProject(clientId);
+
+    const {mutate: editProject} = useEditProject(project_id as string)
     
 
     const handleChange = (event: SelectChangeEvent) => {
@@ -52,15 +61,37 @@ export const AddProjectModal = () => {
     // This is the fundamental model of React - component rerendered when their state or subscription change, not just when the user does something.
     
 
-    const { register, handleSubmit, formState: {
+    const { register, handleSubmit, reset , formState: {
         errors
     } } = useForm<ProjectDataType>({
         resolver: zodResolver(AddProjectSchema)
     });
 
     const onSubmit = (data: ProjectDataType) => {
-        createProject(data)
+        const payload = {
+            ...data,
+            client_id: clientId
+        }
+        if(initialData) {
+            editProject({
+                ...data
+            })
+        }
+        else {
+            createProject(payload)
+        }
     }
+
+    useEffect(()=>{
+        if(initialData){
+            reset({
+                title: initialData.title,
+                status: initialData.status
+            })
+            
+        }
+
+    }, [initialData, reset])
 
    
 

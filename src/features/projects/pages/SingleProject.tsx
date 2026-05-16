@@ -9,11 +9,13 @@ import {
   Button,
   List,
   ListItem,
+  ListItemIcon,
   ListItemText,
   Paper,
   Menu,
   IconButton,
-  MenuItem
+  MenuItem,
+  Checkbox
 } from '@mui/material'
 
 import { MoreVert } from '@mui/icons-material'
@@ -26,35 +28,63 @@ import { MilestoneModalForm } from '../../milestone/components/MilestoneModalFor
 import { useMilestoneStore } from '../../milestone/stores/milestoneStore'
 import { useListMilestones } from '../../milestone/hooks/useListMilestones'
 import { useDeleteMilestone } from '../../milestone/hooks/useDeleteMilestone'
+import { AddProjectModal } from '../components/AddProjectModal'
+import { useProjectStore } from '../stores/ProjectStore'
+import type { Milestone, MilestoneFormType } from '../../milestone/types/types'
 import {useState} from 'react'
+import { useCompleteMilestone } from '../../milestone/hooks/useCompleteMilestone'
+
+import { InvoiceModalForm } from '../../invoice/components/InvoiceModalForm'
+import { useInvoiceStore } from '../../invoice/stores/InvoiceStore'
 
 export const SingleProject = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const openModal = useMilestoneStore(state => state.openModal)
-  const setOpenModal = useMilestoneStore(state => state.setOpenModal)
+  const openMilestoneModal = useMilestoneStore(state => state.openModal)
+  const setOpenMilestoneModal = useMilestoneStore(state => state.setOpenModal)
   const { data: milestones } = useListMilestones(id ?? '');
   const { data: project, isLoading } = useGetSingleProject(id ?? '')
-  const {mutate: deleteMilestone} = useDeleteMilestone();
+  console.log(project)
+  const { mutate: deleteMilestone } = useDeleteMilestone();
+  const {mutate: completeMilestone} = useCompleteMilestone();
+  const openProjectModal = useProjectStore(state => state.openModal)
+  const setOpenProjectModal = useProjectStore(state => state.setOpenModal)
 
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const openInvoiceModal = useInvoiceStore(state=> state.openModal)
+  const setOpenInvoiceModal = useInvoiceStore(state=> state.setOpenModal)
+
+
+
+
+  const [anchorEl, setAnchorEl] = useState<HTMLElement| null>(null);
+  const [selectedMilestone, setSelectedMilestone] = useState<Milestone | null>(null)
 
   const open = Boolean(anchorEl)
 
 
-  const handleMenuOpen = (e: React.MouseEvent<HTMLElement>)=>{
-    e.stopPropagation()
-    setAnchorEl(e.currentTarget)
-    console.log(e)
-  }
 
-  
+  const handleMenuOpen = (e: React.MouseEvent<HTMLElement>, milestone: Milestone)=>{
+    setAnchorEl(e.currentTarget)
+    console.log('Milestone data got when clicking the dot button', milestone)
+    setSelectedMilestone(milestone)
+   
+  }
 
   const handleMenuClose = ()=>{
-    setAnchorEl(null)
+    setAnchorEl(null);
+    setSelectedMilestone(null)
+    console.log('Handle menu close fired.')
   }
 
-  console.log(anchorEl)
+
+  const handleMilestoneDelete = (milestone_id: string)=>{
+    deleteMilestone(milestone_id)
+  }
+
+  const handleCompleteMilestone = (milestone_id: string)=>{
+    completeMilestone(milestone_id)
+
+  }
 
 
   if (!id) {
@@ -86,7 +116,7 @@ export const SingleProject = () => {
           Back
         </Button>
 
-        <Button startIcon={<EditIcon />} variant="contained">
+        <Button startIcon={<EditIcon />} variant="contained" onClick={() => setOpenProjectModal(true)}>
           Edit Project
         </Button>
       </Stack>
@@ -133,7 +163,7 @@ export const SingleProject = () => {
                 startIcon={<AddIcon />}
                 variant="contained"
                 size="small"
-                onClick={() => setOpenModal(true)}
+                onClick={() => setOpenMilestoneModal(true)}
               >
                 Add Milestone
               </Button>
@@ -142,28 +172,35 @@ export const SingleProject = () => {
             {(milestones ?? []).length > 0 ? <Paper variant="outlined">
               <List>
                 {milestones?.map(milestone =>
-                <>
-                   <ListItem key={milestone.id} divider>
+                  <ListItem key={milestone.id} divider>
+                    <ListItemIcon>
+                      <Checkbox checked={milestone.is_completed}>
+                      </Checkbox>
+                      
+                    </ListItemIcon>
+                    
                     <ListItemText primary={milestone.name} />
-                    <IconButton size='small' onClick={handleMenuOpen}>
+                    <IconButton size='small' onClick={(e)=>handleMenuOpen(e, milestone)}>
                       <MoreVert fontSize='small' />
                     </IconButton>
                   </ListItem>
-
-                  <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
-                    <MenuItem>
-                      Edit
-                    </MenuItem>
-
-                    <MenuItem onClick={()=> deleteMilestone(milestone.id)}>
-                      Delete
-                    </MenuItem>
-
-                  </Menu>
-                </>
-               
-                
                 )}
+
+                <Menu open={open} onClose={handleMenuClose} anchorEl={anchorEl}>
+                  <MenuItem onClick={()=> handleCompleteMilestone(selectedMilestone?.id ?? '')}>
+                  Mark as complete
+                  </MenuItem>
+                  <MenuItem onClick={()=> {
+                    console.log('SelectedMilestone at edit click', selectedMilestone)
+                    setOpenMilestoneModal(true)
+                  }}>
+                    Edit
+                  </MenuItem>
+                  <MenuItem onClick={()=>handleMilestoneDelete(selectedMilestone?.id ?? '')}>
+                    Delete
+                  </MenuItem>
+
+                </Menu>
 
 
               </List>
@@ -214,10 +251,19 @@ export const SingleProject = () => {
             </Stack>
           </Box>
 
+
+          <Button onClick={()=> setOpenInvoiceModal(true)}>
+            Create invoice
+          </Button>
+
         </CardContent>
       </Card>
 
-      {openModal && <MilestoneModalForm project_id={project?.id} />}
+      {openMilestoneModal && <MilestoneModalForm project_id={project?.id} initialData={selectedMilestone} />}
+
+      {openProjectModal && <AddProjectModal project_id={project?.id} initialData={project} />}
+
+      {openInvoiceModal && <InvoiceModalForm client_id={project?.client_id} project_data={project} milestone_data={milestones ?? []}/>}
     </Box>
   )
 }

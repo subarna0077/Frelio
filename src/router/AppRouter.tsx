@@ -6,7 +6,8 @@ import { Dashboard } from '../features/dashboard/pages/Dashboard'
 import { Projects } from '../features/projects/pages/Projects'
 import { SingleProject } from '../features/projects/pages/SingleProject'
 import { ClientsPage } from '../features/clients/pages/ClientsPage'
-
+import { Invoices } from '../features/invoice/pages/Invoices'
+import AppLayout from '../shared/components/Layout'
 export const AppRouter = () => {
 
     return (
@@ -19,7 +20,7 @@ export const AppRouter = () => {
             <Route path='/register' element={<Register />}></Route>
 
 
-            <Route path='/dashboard' element={<ProtectedRoute><Dashboard /></ProtectedRoute>
+            <Route path='/dashboard' element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>
             }></Route>
 
              <Route path='/clients' element={<ProtectedRoute><ClientsPage /></ProtectedRoute>
@@ -28,6 +29,10 @@ export const AppRouter = () => {
             <Route path='/projects' element={<ProtectedRoute><Projects /></ProtectedRoute>}></Route>
 
             <Route path='/projects/:id' element={<ProtectedRoute><SingleProject /></ProtectedRoute>}></Route>
+
+            <Route path='invoices' element={<ProtectedRoute><Invoices/></ProtectedRoute>}>
+
+            </Route>
         </Routes>
 
     )

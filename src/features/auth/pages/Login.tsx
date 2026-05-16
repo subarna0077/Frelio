@@ -1,98 +1,135 @@
-
+import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Paper
-} from '@mui/material'
-
-import { Link, Navigate } from 'react-router-dom'
+  Box, Card, CardContent, TextField, Button, Typography,
+  Link, InputAdornment, IconButton, CircularProgress,
+} from '@mui/material';
+import { VisibilityRounded, VisibilityOffRounded, BoltRounded } from '@mui/icons-material';
+import { Navigate, Link as RouterLink } from 'react-router-dom';
+import toast, {Toaster} from 'react-hot-toast';
+import { useLogin } from '../hooks/useLogin';
 import { useForm } from 'react-hook-form'
-import type { LoginDataType } from '../types/auth'
-import { LoginFormSchema } from '../types/auth'
+import { LoginFormSchema } from '../types/auth';
+import type { LoginDataType } from '../types/auth';
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useAuthStore } from '../stores/authStore'
+import { useAuthStore } from '../stores/authStore';
 
-import { useLogin } from '../hooks/useLogin'
-export const Login = () => {
+export const Login: React.FC = () => {
+  const [showPassword, setShowPassword] = useState(false);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
 
-  const { reset, register, handleSubmit, formState: {
+ 
+
+  const { register, handleSubmit, reset, formState: {
     errors
   } } = useForm<LoginDataType>({
     resolver: zodResolver(LoginFormSchema)
-  })
 
-  const {mutate: loginFn} = useLogin()
+  });
 
-  const isAuthenticated = useAuthStore((state)=> state.isAuthenticated)
+  const { mutate: login, isPending, error, isError, isSuccess } = useLogin();
 
-  const onSubmit = (data: LoginDataType) => {
-    loginFn(data)
-  }
+  const onSubmit = async (data: LoginDataType) => {
+    await login(data);
+    reset();
+  };
 
-  if(isAuthenticated) return <Navigate to="/dashboard"/>
+    useEffect(()=>{
+    if (isError && error) {
+      toast.error(error.message)
+    }
+
+    if(isSuccess) toast.success('Logged in successfully.')
+
+  }, [isError, error, isSuccess]);
+
+  if (isAuthenticated) return <Navigate to='/dashboard' />
+
+
 
   return (
-    <Box component="form"
-    onSubmit={handleSubmit(onSubmit)}
-      sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh'
-      }}
-    >
-      <Paper
-        elevation={3}
-        sx={{
-          padding: 4,
-          width: 350,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2
-        }}
-      >
-        <Typography variant="h5" sx={{
-          textAlign: 'center'
-        }}>
-          Login
-        </Typography>
+    <Box sx={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      bgcolor: '#F5F7FA',
+      p: 2,
+    }}>
+      <Box sx={{ width: '100%', maxWidth: 420 }}>
+        {/* Logo */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 4, justifyContent: 'center' }}>
+          <Box sx={{
+            width: 40, height: 40, borderRadius: 2.5,
+            bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <BoltRounded sx={{ color: '#fff', fontSize: 22 }} />
+          </Box>
+          <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: '-0.5px' }} >Frelio</Typography>
+        </Box>
 
-        <TextField
-          {...register('email')}
-          error= {!!errors.email}
-          helperText={errors.email?.message}
-          label="Email"
-          type="email"
-          variant="outlined"
-          fullWidth
-        />
+        <Card elevation={0}>
+          <CardContent sx={{ p: 4 }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>Welcome back</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Sign in to manage your freelance projects
+            </Typography>
 
-        <TextField
-          {...register('password')}
-           error= {!!errors.password}
-          helperText={errors.password?.message}
-          label="Password"
-          type="password"
-          variant="outlined"
-          fullWidth
-        />
+            <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <TextField
+                label="Email address"
+                type="email"
+                fullWidth
+                autoComplete="email"
+                autoFocus
+                {...register('email')}
+                error={!!errors.email}
+                helperText={errors.email?.message}
+              />
+              <TextField
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                fullWidth
+                {...register('password')}
+                autoComplete="current-password"
+                error={!!errors.password}
+                helperText={errors.password?.message}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton size="small" onClick={() => setShowPassword(!showPassword)} edge="end">
+                          {showPassword ? <VisibilityOffRounded fontSize="small" /> : <VisibilityRounded fontSize="small" />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
 
-        <Button
-          variant="contained"
-          fullWidth
-          size="large"
-          type='submit'
-        >
-          Login
-        </Button>
 
-        <Typography variant="body2" sx={{ textAlign: "center" }}>
-          Don't have an account? <Link to='/register'>Register</Link>
-        </Typography>
-      </Paper>
+                  }
+
+                }}
+              />
+
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                fullWidth
+                disabled={isPending}
+                sx={{ mt: 1, py: 1.25 }}
+              >
+                {isPending ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Sign in'}
+              </Button>
+            </Box>
+
+            <Typography variant="body2" textAlign="center" mt={3} color="text.secondary">
+              Don't have an account?{' '}
+              <Link component={RouterLink} to="/register" fontWeight={600} color="primary.main" underline="hover">
+                Create account
+              </Link>
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
     </Box>
-  )
-}
-
+  );
+};
