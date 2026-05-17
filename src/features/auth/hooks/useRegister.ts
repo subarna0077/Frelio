@@ -12,7 +12,10 @@ export const useRegister = () => {
             password: data.password,
             options: {
                 data: {
-                    full_name: data.name
+                    full_name: data.name,
+                    business_name: data.businessName ?? null,
+                    pan_number: data.panNumber ?? null, // since our db has null default,  this current line is called nullish coeallision
+                    currency: data.currency ?? null,        
                 }
             }
         });

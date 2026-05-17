@@ -6,6 +6,10 @@ export const RegisterFormSchema = z.object({
     email: z.string().email("Invalid email format"),
     password: z.string().min(8, "Password should be atleast 8 characters"),
     confirmPassword: z.string(),
+    businessName: z.string().optional(),
+    panNumber: z.string().optional(),
+    currency: z.enum(['NPR', 'USD']).optional()
+
 }) // .refine expects the callback to return true if validation success, false if validation failed
 //so we use data.password === data.confirmPassword -> if yes, then true, if no, then show error - it works that way
     .refine((data) => data.password === data.confirmPassword, {

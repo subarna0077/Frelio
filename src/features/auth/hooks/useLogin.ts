@@ -13,8 +13,9 @@ export const useLogin = () => {
             password: data.password
         })
 
-        if (authError) throw authError;
-        return authData
+        if (authError) throw new Error(authError.message);
+        
+        return authData;
     }
 
     return useMutation({
@@ -30,9 +31,9 @@ export const useLogin = () => {
             }
 
             const accessToken = data.session.access_token
-
+            console.log(data)
             setUser(user, accessToken)
         }
-
+    
     })
 }
