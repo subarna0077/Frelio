@@ -1,4 +1,4 @@
-import React, { useState} from 'react';
+import React, { useState } from 'react';
 import {
   Box, Button, Typography, Card, CardContent, List, ListItem,
   ListItemText, ListItemAvatar, Avatar, IconButton, Menu, MenuItem,
@@ -12,45 +12,45 @@ import type { Client } from '../types/types';
 import { AddClientModal } from '../components/AddClientModal';
 import { useClientStore } from '../stores/ClientStore';
 import { useDeleteClient } from '../hooks/useDeleteClient';
-import {toast} from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
 
 
 export const Clients = () => {
-  const open = useClientStore(state=> state.openModal)
-  const setOpenModal = useClientStore(state=> state.setOpenModal)
+  const open = useClientStore(state => state.openModal)
+  const setOpenModal = useClientStore(state => state.setOpenModal)
 
   const { data: clients = [], isLoading } = useGetClients();
-  const [menuAnchor, setMenuAnchor] = useState< HTMLElement | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [openMenu, setOpenMenu] = useState(false);
 
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const {mutate: deleteClient} = useDeleteClient()
+  const { mutate: deleteClient } = useDeleteClient()
   console.log(selectedClient)
 
-  const handleEdit = ()=>{
+  const handleEdit = () => {
     setOpenMenu(false)
     setOpenModal(true);
   }
 
-  const handleDelete = ()=>{
+  const handleDelete = () => {
     setOpenMenu(false)
     // qn to ask ai - should we setMenuAnchor to null here or not since we are setting in when closing menu directly.
-    if(!selectedClient?.id) return;
+    if (!selectedClient?.id) return;
     deleteClient(selectedClient.id, {
-      onSuccess: ()=>{
+      onSuccess: () => {
         toast.success('User deleted successfully.')
       },
-      onError: (error)=>{
+      onError: (error) => {
         toast.error(error.message)
       }
-    })   
+    })
   }
 
-  const handleClose = ()=>{
-          setOpenMenu(false);
-          setMenuAnchor(null);
-          setSelectedClient(null);
-        }
+  const handleClose = () => {
+    setOpenMenu(false);
+    setMenuAnchor(null);
+    setSelectedClient(null);
+  }
 
 
   return (
@@ -65,14 +65,14 @@ export const Clients = () => {
         <Button
           variant="contained"
           startIcon={<AddRounded />}
-          onClick={()=>{
+          onClick={() => {
             setOpenModal(true)
           }}
           sx={{
             cursor: 'pointer'
           }}
 
-         
+
         >
           Add client
         </Button>
@@ -99,7 +99,7 @@ export const Clients = () => {
               <Typography variant="body2" color="text.secondary" mt={0.5} mb={2}>
                 Add your first client to get started
               </Typography>
-              <Button variant="contained" startIcon={<AddRounded />} onClick={()=> setOpenModal(true)}>
+              <Button variant="contained" startIcon={<AddRounded />} onClick={() => setOpenModal(true)}>
                 Add client
               </Button>
             </Box>
@@ -112,7 +112,7 @@ export const Clients = () => {
                     secondaryAction={
                       <IconButton
                         size="small"
-                        onClick={(e)=>{
+                        onClick={(e) => {
                           setMenuAnchor(e.currentTarget)
                           setOpenMenu(true)
                           setSelectedClient(client)
@@ -158,9 +158,9 @@ export const Clients = () => {
         </CardContent>
       </Card>
 
-      {open && <AddClientModal initialData={selectedClient } resetOnClose={handleClose}  />}
+      {open && <AddClientModal initialData={selectedClient} resetOnClose={handleClose} />}
 
-      {/* Context Menu */} 
+      {/* Context Menu */}
       <Menu
         open={openMenu}
         onClose={handleClose}
