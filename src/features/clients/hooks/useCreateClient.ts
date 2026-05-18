@@ -1,10 +1,12 @@
-import {useMutation} from '@tanstack/react-query'
+import {useMutation, useQueryClient} from '@tanstack/react-query'
 import { supabase } from '../../../lib/supabase'
 import {type ClientFormType } from '../types/types'
 import { useAuthStore } from '../../auth/stores/authStore'
 
 
 export const useCreateClient = ()=>{
+
+    const queryClient = useQueryClient()
     const user = useAuthStore(state=> state.user)
     
     const createClient = async(data: ClientFormType )=>{
@@ -22,8 +24,11 @@ export const useCreateClient = ()=>{
 
     return useMutation({
         mutationFn: createClient,
-        onSuccess:(data)=> {
-            console.log(data)
+        onSuccess:()=> {
+            queryClient.invalidateQueries({
+                queryKey:['clients']
+            })
+            
         }
     })
 

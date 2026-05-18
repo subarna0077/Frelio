@@ -1,249 +1,181 @@
+import React, { useState} from 'react';
 import {
-    Box,
-    Typography,
-    Card,
-    CardContent,
-    Avatar,
-    Stack,
-    Button,
-    Chip,
-    Divider,
-    Paper,
-    List,
-    ListItem,
-    ListItemText,
-    IconButton,
-} from '@mui/material'
-
-import AddIcon from '@mui/icons-material/Add'
-import EmailIcon from '@mui/icons-material/Email'
-import PhoneIcon from '@mui/icons-material/Phone'
-import BusinessIcon from '@mui/icons-material/Business'
-import EditIcon from '@mui/icons-material/Edit'
-import DeleteIcon from '@mui/icons-material/Delete'
-import { useGetClients } from '../hooks/useGetClients'
-import { useDeleteClient } from '../hooks/useDeleteClient'
-import { useClientStore } from '../stores/ClientStore'
-import { AddClientModal } from '../components/AddClientModal'
-
-export const ClientsPage = () => {
-
-    const { data: clients, isLoading: isClientLoading } = useGetClients()
-
-    const {mutate: deleteClient} = useDeleteClient();
-    const handleDeleteClient = (id: string)=>{
-        deleteClient(id)
-    }
-
-    const openModal = useClientStore(state=> state.openModal)
-    const setOpenModal = useClientStore(state=> state.setOpenModal)
+  Box, Button, Typography, Card, CardContent, List, ListItem,
+  ListItemText, ListItemAvatar, Avatar, IconButton, Menu, MenuItem,
+  Skeleton, Divider, Chip,
+} from '@mui/material';
+import {
+  AddRounded, MoreVertRounded, PeopleRounded, FolderRounded,
+} from '@mui/icons-material';
+import { useGetClients } from '../hooks/useGetClients';
+import type { Client } from '../types/types';
+import { AddClientModal } from '../components/AddClientModal';
+import { useClientStore } from '../stores/ClientStore';
+import { useDeleteClient } from '../hooks/useDeleteClient';
+import {toast} from 'react-hot-toast'
 
 
+export const Clients = () => {
+  const open = useClientStore(state=> state.openModal)
+  const setOpenModal = useClientStore(state=> state.setOpenModal)
+
+  const { data: clients = [], isLoading } = useGetClients();
+  const [menuAnchor, setMenuAnchor] = useState< HTMLElement | null>(null);
+  const [openMenu, setOpenMenu] = useState(false);
+
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const {mutate: deleteClient} = useDeleteClient()
+  console.log(selectedClient)
+
+  const handleEdit = ()=>{
+    setOpenMenu(false)
+    setOpenModal(true);
+  }
+
+  const handleDelete = ()=>{
+    setOpenMenu(false)
+    // qn to ask ai - should we setMenuAnchor to null here or not since we are setting in when closing menu directly.
+    if(!selectedClient?.id) return;
+    deleteClient(selectedClient.id, {
+      onSuccess: ()=>{
+        toast.success('User deleted successfully.')
+      },
+      onError: (error)=>{
+        toast.error(error.message)
+      }
+    })   
+  }
+
+  const handleClose = ()=>{
+          setOpenMenu(false);
+          setMenuAnchor(null);
+          setSelectedClient(null);
+        }
 
 
-    return (
-        <Box
-            sx={{
-                minHeight: '100vh',
-                bgcolor: '#f5f5f5',
-                p: 4,
-            }}
-        >
-
-            {/* Header */}
-            <Stack
-                sx={{
-                    direction: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    mb: 4,
-
-
-                }}
-            >
-                <Box>
-                    <Typography
-                        variant="h4"
-                        sx={{ fontWeight: 'bold' }}
-                    >
-                        Clients
-                    </Typography>
-
-                    <Typography color="text.secondary">
-                        Manage all your clients here
-                    </Typography>
-                </Box>
-
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={()=> setOpenModal(true)}
-                >
-                    Add Client
-                </Button>
-            </Stack>
-
-            {/* Client List */}
-            <Stack spacing={3}>
-
-                {(clients ?? []).map((client) => (
-
-                    <Card
-                        key={client.id}
-                        sx={{
-                            borderRadius: 3,
-                            boxShadow: 2,
-                        }}
-                    >
-                        <CardContent>
-
-                            {/* Top */}
-                            <Stack
-                                sx={{
-                                    direction: 'row',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    mb: 3
-                                }}
-                            >
-
-                                {/* Left */}
-                                <Stack
-                                    sx={{
-                                        direction: 'row',
-                                        spacing: 2,
-                                        alignItems: 'center'
-                                    }}
-
-                                >
-                                    <Avatar
-                                        sx={{
-                                            width: 56,
-                                            height: 56,
-                                        }}
-                                    >
-                                        {client.name.charAt(0)}
-                                    </Avatar>
-
-                                    <Box>
-                                        <Typography
-                                            variant="h6"
-                                            sx={{ fontWeight: 'bold' }}
-                                        >
-                                            {client.name}
-                                        </Typography>
-
-
-                                    </Box>
-                                </Stack>
-
-                                {/* Right */}
-                                <Stack
-                                    sx={
-                                        {
-                                            direction: 'row',
-                                            spacing: 2,
-                                            alignItems: 'center'
-                                        }
-                                    }
-
-                                >
-
-                                    <Chip
-                                        label={client.created_at}
-                                    />
-
-                                    <Button
-                                        variant="outlined"
-                                        startIcon={<EditIcon />}
-                                    >
-                                        Edit
-                                    </Button>
-
-                                    <IconButton color="error" onClick={()=>handleDeleteClient(client.id)}>
-                                        <DeleteIcon />
-                                    </IconButton>
-
-                                </Stack>
-                            </Stack>
-
-                            <Divider sx={{ mb: 3 }} />
-
-                            {/* Client Details */}
-                            <Stack spacing={2}>
-
-                                <Stack
-                                sx={{
-                                    direction: 'row', alignItems: 'center'
-                                }}
-                                   
-                                >
-                                    <EmailIcon fontSize="small" />
-
-                                    <Typography>
-                                        {client?.email}
-                                    </Typography>
-                                </Stack>
-
-                                <Stack
-                                sx={{direction: 'row', spacing: 1, alignItems: 'center'}}
-                                  
-                                >
-                                    <PhoneIcon fontSize="small" />
-
-                                    <Typography>
-                                        {client.phone}
-                                    </Typography>
-                                </Stack>
-
-                                <Stack
-                                sx={{
-                                    direction: 'row', spacing:1, alignItems: 'center'
-                                }}
-                                    
-                                >
-                                    <BusinessIcon fontSize="small" />
-
-                                    <Typography>
-                                        {client.projects.length} Active Projects
-                                    </Typography>
-                                </Stack>
-                            </Stack>
-
-                            {/* Recent Projects */}
-                            <Box mt={4}>
-                                <Typography
-                                    variant="subtitle1"
-                                    sx={{
-                                        fontWeight: 'bold',
-                                        mb: 2,
-                                    }}
-                                >
-                                    Recent Projects
-                                </Typography>
-
-                                {client.projects.length > 0 ?  <Paper variant="outlined">
-                                    <List>
-
-                                        {client?.projects.map(project=>
-                                        <ListItem>
-                                            {project.title}
-
-                                        </ListItem>)}
-
-                                    </List>
-                                </Paper>: <Typography>No projects available.</Typography>}
-
-                               
-                            </Box>
-
-                        </CardContent>
-                    </Card>
-                ))}
-
-                {openModal && <AddClientModal/>}
-
-            </Stack>
+  return (
+    <Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={700}>Clients</Typography>
+          <Typography variant="body2" color="text.secondary" mt={0.25}>
+            Manage your client relationships
+          </Typography>
         </Box>
-    )
-}
+        <Button
+          variant="contained"
+          startIcon={<AddRounded />}
+          onClick={()=>{
+            setOpenModal(true)
+          }}
+          sx={{
+            cursor: 'pointer'
+          }}
+
+         
+        >
+          Add client
+        </Button>
+      </Box>
+
+      <Card elevation={0}>
+        <CardContent sx={{ p: 0 }}>
+          {isLoading ? (
+            <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {[1, 2, 3, 4].map(i => (
+                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 1 }}>
+                  <Skeleton variant="circular" width={44} height={44} />
+                  <Box sx={{ flex: 1 }}>
+                    <Skeleton width="40%" height={20} />
+                    <Skeleton width="60%" height={16} />
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          ) : clients.length === 0 ? (
+            <Box sx={{ py: 8, textAlign: 'center' }}>
+              <PeopleRounded sx={{ fontSize: 52, color: '#E0E0E0', mb: 1.5 }} />
+              <Typography variant="subtitle1" fontWeight={600} color="text.secondary">No clients yet</Typography>
+              <Typography variant="body2" color="text.secondary" mt={0.5} mb={2}>
+                Add your first client to get started
+              </Typography>
+              <Button variant="contained" startIcon={<AddRounded />} onClick={()=> setOpenModal(true)}>
+                Add client
+              </Button>
+            </Box>
+          ) : (
+            <List disablePadding>
+              {clients.map((client, idx) => (
+                <React.Fragment key={client.id}>
+                  <ListItem
+                    sx={{ px: 2.5, py: 1.5 }}
+                    secondaryAction={
+                      <IconButton
+                        size="small"
+                        onClick={(e)=>{
+                          setMenuAnchor(e.currentTarget)
+                          setOpenMenu(true)
+                          setSelectedClient(client)
+                        }}
+                      >
+                        <MoreVertRounded fontSize="small" />
+                      </IconButton>
+                    }
+                  >
+                    <ListItemAvatar>
+                      <Avatar sx={{ bgcolor: 'rgba(29,158,117,0.12)', color: 'primary.main', fontWeight: 700 }}>
+                        {client.name.charAt(0).toUpperCase()}
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="body2" fontWeight={600}>{client.name}</Typography>
+                          {client.projects.length > 0 && (
+                            <Chip
+                              icon={<FolderRounded sx={{ fontSize: '14px !important' }} />}
+                              label={`${client.projects.length} projects`}
+                              size="small"
+                              sx={{ fontSize: '0.7rem' }}
+                            />
+                          )}
+                        </Box>
+                      }
+                      secondary={`${client.phone} · ${client.address}`}
+                      slotProps={{
+                        secondary: {
+                          variant: 'caption', noWrap: true
+                        }
+                      }}
+                    // secondaryTypographyProps={{ variant: 'caption', noWrap: true }}
+                    />
+                  </ListItem>
+                  {idx < clients.length - 1 && <Divider variant="inset" component="li" />}
+                </React.Fragment>
+              ))}
+            </List>
+          )}
+        </CardContent>
+      </Card>
+
+      {open && <AddClientModal initialData={selectedClient } resetOnClose={handleClose}  />}
+
+      {/* Context Menu */} 
+      <Menu
+        open={openMenu}
+        onClose={handleClose}
+        anchorEl={menuAnchor}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        <MenuItem onClick={handleEdit}>Edit</MenuItem>
+        <MenuItem onClick={handleDelete}
+        >
+          Delete
+        </MenuItem>
+      </Menu>
+
+
+    </Box>
+  );
+};

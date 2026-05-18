@@ -15,7 +15,7 @@ export const useGetSingleClient = (clientId: string) => {
     }
 
     return useQuery<Client>({
-        queryKey: ['clients', clientId],
+        queryKey: ['client', clientId],
         queryFn: getClient,
         enabled: !!clientId
     })
