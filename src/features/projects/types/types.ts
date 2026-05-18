@@ -8,12 +8,16 @@ export const AddProjectSchema = z.object({
 
 export type ProjectDataType = z.infer<typeof AddProjectSchema>
 
+export type ProjectStatus = 'active' | 'completed' | 'on-hold';
+
+
 export type Project = {
     id: string
     user_id: string
     client_id: string
     title: string
-    status: string
+    status: ProjectStatus
     created_at: string
     clients: Pick<Client, 'id' | 'name' | 'phone'> | null
 }
+

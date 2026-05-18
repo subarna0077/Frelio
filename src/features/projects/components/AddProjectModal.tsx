@@ -1,155 +1,121 @@
-import { useForm } from 'react-hook-form'
-import { Dialog, Box, DialogTitle, DialogContent, TextField, DialogActions, Button, Select, FormControl, InputLabel, MenuItem } from '@mui/material'
-import { type ProjectDataType, AddProjectSchema } from '../types/types'
-import { useProjectStore } from '../stores/ProjectStore'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useGetClients } from '../../clients/hooks/useGetClients'
-import {useState, useEffect} from 'react'
-import {type SelectChangeEvent} from '@mui/material/Select'
-import { useCreateProject } from '../hooks/useCreateProject'
-import { useEditProject } from '../hooks/useEditProject'
+import React, { useState, useEffect } from 'react';
+import {
+    Dialog, DialogTitle, DialogContent, DialogActions,
+    TextField, Button, Box, CircularProgress, IconButton,
+    MenuItem,
+} from '@mui/material';
+import { CloseRounded } from '@mui/icons-material';
+import type { Client } from '../../clients/types/types';
+import type { Project, ProjectDataType } from '../types/types';
+import { useGetClients } from '../../clients/hooks/useGetClients';
+import { useForm, Controller } from 'react-hook-form'
+import { useCreateProject } from '../hooks/useCreateProject';
+import { toast } from 'react-hot-toast'
+import { useProjectStore } from '../stores/ProjectStore';
+import { useEditProject } from '../hooks/useEditProject';
 
-export interface AddProjectModalProps {
-    project_id: string | undefined;
-    initialData?: ProjectDataType
-
+interface AddProjectModalProps {
+    initialData?: Project | null,
+    resetForm: () => void;
 }
 
-export const AddProjectModal = ({project_id, initialData}: AddProjectModalProps) => {
-    const openModal = useProjectStore(state => state.openModal) // first state it is false
-    const setOpenModal = useProjectStore(state => state.setOpenModal) // this is function
-    const [clientId, setClientId] = useState<string>('') // ''
 
-    const handleClose = () => {
+export const AddProjectModal = ({ initialData, resetForm }: AddProjectModalProps) => {
+    const { register, control, reset, handleSubmit } = useForm<ProjectDataType>()
+    const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+    const { mutate: createProject } = useCreateProject(selectedClient?.id)
+    const { mutate: editProject } = useEditProject(initialData?.id);
+
+    const open = useProjectStore(state => state.openModal)
+    const setOpenModal = useProjectStore(state => state.setOpenModal)
+
+
+    const handleFormClose = () => {
         setOpenModal(false);
+        resetForm()
+        setSelectedClient(null)
     }
-
-    const {mutate: createProject} = useCreateProject(clientId);
-
-    const {mutate: editProject} = useEditProject(project_id as string)
-    
-
-    const handleChange = (event: SelectChangeEvent) => {
-        setClientId(event.target.value as string)
-    }
-
-    const { data: clients, isLoading } = useGetClients() // this is the culprit
-    console.log(clients)
-
-    // But useGetClient is asynchronous. it doesnt just run once and stop. it has its own lifecycle that happens after the first render.
-    // component mounts at first - it logs undefined as client is undefined.
-    // tanstack query starts the network request
-    // isLoading = true // log2
-
-    // data comes from the supabase
-    //isLoading set to false -3rd rerender
-    // clients = [{...}] log4
-
-
-    /// Understand in a way that the componetn didnt
-    // re-render because i changed it, it rerendered because something it was subscribed was changed.
-
-
-    // useGetClients is a subscription. = your component is saying whenerver this data changes, update me. Tanstack query  is the one triggering the re-renders, not my code directly.
-
-    // My component is subscribed to useGetClients
-    // Tanstack query does it work in the background
-    // Everytime tanstack query state changes.
-    // component rerenders to reflect the new state
-
-
-    // This is the fundamental model of React - component rerendered when their state or subscription change, not just when the user does something.
-    
-
-    const { register, handleSubmit, reset , formState: {
-        errors
-    } } = useForm<ProjectDataType>({
-        resolver: zodResolver(AddProjectSchema)
-    });
 
     const onSubmit = (data: ProjectDataType) => {
-        const payload = {
-            ...data,
-            client_id: clientId
-        }
-        if(initialData) {
-            editProject({
-                ...data
-            })
-        }
-        else {
-            createProject(payload)
-        }
-    }
 
-    useEffect(()=>{
-        if(initialData){
-            reset({
-                title: initialData.title,
-                status: initialData.status
-            })
-            
+        if (!selectedClient?.id) {
+            toast.error('Please select a client')
+            return
         }
+
+        if (initialData) {
+            editProject(data, {
+                onSuccess: () => {
+                    toast.success('Edited successfully')
+                    handleFormClose()
+                },
+                onError: (error) => {
+                    toast.error(error.message)
+                }
+            })
+        } else {
+            createProject(data, {
+                onSuccess: () => {
+                    toast.success('Project created successfully.')
+                    handleFormClose()
+                }
+            })
+        }
+
+    };
+
+    useEffect(() => {
+        reset({
+            title: initialData?.title ?? '',
+            status: initialData?.status ?? ''
+        })
 
     }, [initialData, reset])
 
-   
-
-    
+    const { data: clients } = useGetClients();
     return (
-        <div>
-            <Dialog open={openModal} onClose={handleClose} fullWidth maxWidth="sm">
-                <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+        <Dialog open={open} onClose={handleFormClose} maxWidth="sm" fullWidth component="form" onSubmit={handleSubmit(onSubmit)}>
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
+                {initialData ? 'Edit Project' : 'Add New Project'}
+                <IconButton size="small" onClick={handleFormClose}><CloseRounded fontSize="small" /></IconButton>
+            </DialogTitle>
 
-                    <DialogTitle>Add Project</DialogTitle>
+            <DialogContent sx={{ pt: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <TextField label="Project name *" fullWidth autoFocus {...register('title')} />
+                    <TextField select label="Client *" fullWidth value={selectedClient?.id ?? ''}>
+                        {clients?.length === 0
+                            ? <MenuItem disabled>No clients available</MenuItem>
+                            : clients?.map(c => <MenuItem key={c.id} value={c.id} onClick={() => setSelectedClient(c)}>{c.name}</MenuItem>)
+                        }
+                    </TextField>
 
-                    <DialogContent
-                        sx={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 2,
-                            mt: 1
-                        }}
-                    >
-                        <TextField error={!!errors.title} helperText={errors.title?.message} {...register('title')} label="Project title" fullWidth />
-                        <TextField error={!!errors.status} helperText={errors.status?.message} {...register('status')} label="Status" fullWidth />
+                    <Controller name='status' control={control} render={({ field }) => (
+                        <TextField {...field} select label="Status" fullWidth>
+                            <MenuItem value="active">Active</MenuItem>
+                            <MenuItem value="on-hold">On Hold</MenuItem>
+                            <MenuItem value="completed">Completed</MenuItem>
+                        </TextField>
 
-                        <FormControl fullWidth>
-                            <InputLabel id="demo-simple-select-label">Select client</InputLabel>
-                            <Select
-                                labelId="demo-simple-select-label"
-                                id="demo-simple-select"
-                                value={clientId}
-                                label="Client"
-                                onChange={handleChange}
-                            >
-                                {clients?.map(client => <MenuItem value={client.id}>{client.name}
-                                </MenuItem>)}
-
-                            </Select>
-                        </FormControl>
-
-
-
-
-
-                    </DialogContent>
-
-                    <DialogActions>
-                        <Button onClick={handleClose}>
-                            Cancel
-                        </Button>
-
-                        <Button variant="contained" type='submit'>
-                            Save
-                        </Button>
-                    </DialogActions>
+                    )} />
                 </Box>
+            </DialogContent>
 
-            </Dialog>
-
-        </div>
-    )
-}
-
-
+            <DialogActions sx={{ px: 3, pb: 2.5 }}>
+                <Button variant="outlined" color="inherit" sx={{ color: 'text.secondary', borderColor: '#E0E0E0' }} onClick={() => {
+                    reset({
+                        status: '',
+                        title: ''
+                    })
+                    handleFormClose()
+                }}>
+                    Cancel
+                </Button>
+                <Button variant="contained" type='submit'>
+                    {initialData ? 'Edit project': 'Create project'}
+                    {/* {loading ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : project ? 'Save changes' : 'Create project'} */}
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+};

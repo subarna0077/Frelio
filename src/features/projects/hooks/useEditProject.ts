@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/supabase';
 import type{ ProjectDataType } from '../types/types';
 
 
-export const useEditProject = (project_id: string) => {
+export const useEditProject = (project_id?: string) => {
 
     const queryClient = useQueryClient();
 
@@ -17,7 +17,7 @@ export const useEditProject = (project_id: string) => {
     return useMutation({
         mutationFn: editProject,
         onSuccess: () => queryClient.invalidateQueries({
-            queryKey: ['project']
+            queryKey: ['projects']
         })
 
     })

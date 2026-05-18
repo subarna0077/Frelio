@@ -1,85 +1,193 @@
-import { Button } from '@mui/material'
-import { useProjectStore } from '../stores/ProjectStore'
-import { AddProjectModal } from '../components/AddProjectModal'
-import { useGetProjects } from '../hooks/useGetProjects'
-import { List, ListItem, ListItemButton, ListItemText, IconButton, Menu, MenuItem } from '@mui/material'
-import { MoreVert } from '@mui/icons-material'
-import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
-import { useDeleteProject } from '../hooks/useDeleteProject'
-export const Projects = () => {
+import React, { useState } from 'react';
+import {
+  Box, Button, Typography, Card, CardContent, List, ListItem,
+  ListItemText, IconButton, Menu, MenuItem, Skeleton, Divider,
+  Chip, Avatar, ListItemAvatar,
+} from '@mui/material';
+import { AddRounded, MoreVertRounded, FolderRounded } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useGetProjects } from '../hooks/useGetProjects';
+import type { Project, ProjectStatus } from '../types/types';
+import toast from 'react-hot-toast';
+import { AddProjectModal } from '../components/AddProjectModal';
+import { useProjectStore } from '../stores/ProjectStore';
+import { useDeleteProject } from '../hooks/useDeleteProject';
 
-  const setModal = useProjectStore(state => state.setOpenModal)
-  const openModal = useProjectStore(state => state.openModal)
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const open = Boolean(anchorEl)
+// const statusColors: Record<ProjectStatus, { bg: string; color: string; label: string }> = {
+//   active: { bg: 'rgba(29,158,117,0.1)', color: '#1D9E75', label: 'Active' },
+//   completed: { bg: 'rgba(107,114,128,0.1)', color: '#6B7280', label: 'Completed' },
+//   'on-hold': { bg: 'rgba(245,158,11,0.1)', color: '#D97706', label: 'On Hold' },
+// };
 
- 
+export const ProjectsPage = () => {
 
+  const open = useProjectStore(state => state.openModal)
+  const setOpenModal = useProjectStore(state => state.setOpenModal)
 
-  const navigate = useNavigate()
-
-  const { data: projects } = useGetProjects()
-  console.log(projects)
-
-  const handleMenuOpen = (e: React.MouseEvent<HTMLElement>) => {
-    e.stopPropagation();
-    setAnchorEl(e.currentTarget);
-  }
+  const navigate = useNavigate();
+  const { data: projects = [], isLoading: projLoading } = useGetProjects();
+  const { mutate: deleteProject } = useDeleteProject()
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const loading = projLoading;
 
   const handleMenuClose = () => {
-    setAnchorEl(null)
+    setMenuAnchor(null);
+    setSelectedProject(null);
   }
 
-  const {mutate: deleteProject} = useDeleteProject()
+  const handleEdit = () => {
+    setMenuAnchor(null);
+    setOpenModal(true);
+  }
 
-  
+  const handleDelete = () => {
+    setMenuAnchor(null);
 
-  // function ProjectItem({project}: {project: Project}){
+    if (!selectedProject?.id) return;
 
+    deleteProject(selectedProject.id, {
+      onSuccess: () => {
+        toast.success('Project deleted successfully.')
+        setSelectedProject(null)
+      },
+      onError: () => {
+        toast.error('Error deleting project.')
+      }
+    })
+  }
 
-  // }
-
-
+  const resetForm = () => {
+    setSelectedProject(null)
+  }
 
 
   return (
-    <div>
-      Welcome to projects page
+    <Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>Projects</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary",
+            mt: 0.25
+          }}>
+            {projects.length} total project{projects.length !== 1 ? 's' : ''}
+          </Typography>
+        </Box>
+        <Button variant="contained" startIcon={<AddRounded />} onClick={() => setOpenModal(true)}>
+          New project
+        </Button>
+      </Box>
 
-      <Button onClick={() => setModal(true)}>Add new project</Button>
-      {openModal && <AddProjectModal />}
+      <Card elevation={0}>
+        <CardContent sx={{ p: 0 }}>
+          {loading ? (
+            <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {[1, 2, 3].map(i => (
+                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 1 }}>
+                  <Skeleton variant="circular" width={44} height={44} />
+                  <Box sx={{ flex: 1 }}>
+                    <Skeleton width="45%" height={20} />
+                    <Skeleton width="30%" height={16} />
+                  </Box>
+                  <Skeleton width={70} height={24} variant="rounded" />
+                </Box>
+              ))}
+            </Box>
+          ) : projects.length === 0 ? (
+            <Box sx={{ py: 8, textAlign: 'center' }}>
+              <FolderRounded sx={{ fontSize: 52, color: '#E0E0E0', mb: 1.5 }} />
+              <Typography variant="subtitle1" fontWeight={600} color="text.secondary">No projects yet</Typography>
+              <Typography variant="body2" color="text.secondary" mt={0.5} mb={2}>
+                Create your first project to start tracking work
+              </Typography>
+              <Button variant="contained" startIcon={<AddRounded />} onClick={()=>setOpenModal(true)}>
+                New project
+              </Button>
+            </Box>
+          ) : (
+            <List disablePadding>
+              {projects.map((project, idx) => {
+                // const { bg, color, label } = statusInfo(project.status);
+                return (
+                  <React.Fragment key={project.id}>
+                    <ListItem
+                      sx={{
+                        px: 2.5, py: 1.5, cursor: 'pointer',
+                        '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' },
+                      }}
+                      onClick={() => navigate(`/projects/${project.id}`)}
+                      secondaryAction={
+                        <IconButton
+                          size="small"
+                          onClick={e => {
+                            e.stopPropagation();
+                            setMenuAnchor(e.currentTarget);
+                            setSelectedProject(project);
+                          }}
+                        >
+                          <MoreVertRounded fontSize="small" />
+                        </IconButton>
+                      }
+                    >
+                      <ListItemAvatar>
+                        <Avatar>
+                          <FolderRounded fontSize="small" />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="body2" fontWeight={600}>{project.title}</Typography>
+                            <Chip
+                              label={project.status}
+                              size="small"
+                              sx={{ height: 20, fontSize: '0.7rem' }}
+                            />
+                          </Box>
+                        }
+                        secondary={project.client_id || 'No client'}
+                        secondaryTypographyProps={{ variant: 'caption' }}
+                      />
+                    </ListItem>
+                    {idx < projects.length - 1 && <Divider variant="inset" component="li" />}
+                  </React.Fragment>
+                );
+              })}
+            </List>
+          )}
+        </CardContent>
+      </Card>
 
-      <List>
-        {projects?.map(
-          project =>
-            <>
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleMenuClose}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        <MenuItem onClick={handleEdit}>
+          Edit
+        </MenuItem>
+        <MenuItem
+          onClick={handleDelete}
+        >
+          Delete
+        </MenuItem>
+      </Menu>
 
-              <ListItem key={project.id}>
-                <ListItemButton onClick={() => navigate(`/projects/${project.id}`)} >
-                  <ListItemText>{project.title}</ListItemText>
-                  <IconButton size='small' onClick={handleMenuOpen}>
-                    <MoreVert fontSize='small' />
+      {/* <ProjectModal
+        open={modalOpen}
+        onClose={() => { setModalOpen(false); setEditProject(null); }}
+        onSubmit={handleCreate}
+        loading={creating}
+        clients={clients}
+        project={editProject}
+      /> */}
 
-                  </IconButton>
-                </ListItemButton>
-              </ListItem>
+      {open && <AddProjectModal initialData={selectedProject} resetForm={resetForm} />}
+    </Box>
+  );
+};
 
-              <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
-                <MenuItem>Edit</MenuItem>
-                <MenuItem onClick={()=>deleteProject(project.id)}>Delete</MenuItem>
-
-              </Menu>
-            </>
-
-        )}
-      </List>
-
-
-
-
-
-    </div>
-  )
-}
 

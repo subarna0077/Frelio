@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/supabase'
 import type { ProjectDataType } from '../types/types'
 import { useAuthStore } from '../../auth/stores/authStore'
 
-export const useCreateProject = (clientID: string) => {
+export const useCreateProject = (clientID?: string) => {
     const user = useAuthStore(state=> state.user);
     const queryClient = useQueryClient()
    
