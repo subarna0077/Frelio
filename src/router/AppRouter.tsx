@@ -3,11 +3,12 @@ import { Login } from '../features/auth/pages/Login'
 import { Register } from '../features/auth/pages/Register'
 import { ProtectedRoute } from '../shared/components/ProtectedRoute'
 import { Dashboard } from '../features/dashboard/pages/Dashboard'
-import { Projects } from '../features/projects/pages/Projects'
+import { ProjectsPage } from '../features/projects/pages/Projects'
 import { SingleProject } from '../features/projects/pages/SingleProject'
-import { ClientsPage } from '../features/clients/pages/ClientsPage'
+import { Clients } from '../features/clients/pages/ClientsPage'
 import { Invoices } from '../features/invoice/pages/Invoices'
 import AppLayout from '../shared/components/Layout'
+import { InvoiceDetail } from '../features/invoice/pages/InvoiceDetail'
 export const AppRouter = () => {
 
     return (
@@ -23,16 +24,18 @@ export const AppRouter = () => {
             <Route path='/dashboard' element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>
             }></Route>
 
-             <Route path='/clients' element={<ProtectedRoute><ClientsPage /></ProtectedRoute>
+            <Route path='/clients' element={<ProtectedRoute><AppLayout><Clients /></AppLayout></ProtectedRoute>
             }></Route>
 
-            <Route path='/projects' element={<ProtectedRoute><Projects /></ProtectedRoute>}></Route>
+            <Route path='/projects' element={<ProtectedRoute><AppLayout><ProjectsPage /></AppLayout></ProtectedRoute>}></Route>
 
-            <Route path='/projects/:id' element={<ProtectedRoute><SingleProject /></ProtectedRoute>}></Route>
+            <Route path='/projects/:id' element={<ProtectedRoute><AppLayout><SingleProject /></AppLayout></ProtectedRoute>}></Route>
 
-            <Route path='invoices' element={<ProtectedRoute><Invoices/></ProtectedRoute>}>
+            <Route path='invoices' element={<ProtectedRoute><AppLayout><Invoices /></AppLayout></ProtectedRoute>}></Route>
 
-            </Route>
+            <Route path='/invoices/:id' element={<ProtectedRoute><AppLayout><InvoiceDetail /></AppLayout></ProtectedRoute>}></Route>
+
+           
         </Routes>
 
     )
