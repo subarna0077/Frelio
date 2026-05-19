@@ -1,6 +1,14 @@
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue'
 import type { Client } from "../../clients/types/types"
 
+export interface InvoiceItems {
+    id: string,
+    invoice_id: string,
+    description: string,
+    amount: number,
+}
+
+
 export interface Invoice {
     id: string,
     user_id: string,
@@ -11,12 +19,8 @@ export interface Invoice {
     due_date: string,
     created_at: string,
     clients: Pick<Client, 'name'| 'id' | 'address' > | null,
-    total: number
+    total: number,
+    invoice_items: InvoiceItems[]
 }
 
-export interface InvoiceItems {
-    id: string,
-    invoice_id: string,
-    description: string,
-    amount: number,
-}
+
