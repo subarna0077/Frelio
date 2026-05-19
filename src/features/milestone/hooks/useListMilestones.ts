@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/supabase'
 import { useAuthStore } from '../../auth/stores/authStore'
 import type { Milestone } from '../types/types'
 
-export const useListMilestones = (project_id: string)=>{
+export const useListMilestones = (project_id?: string)=>{
 
     const user = useAuthStore(state=> state.user)
     
