@@ -11,6 +11,8 @@ import {
     Select,
     MenuItem,
     IconButton,
+    Skeleton,
+    Stack
 } from '@mui/material'
 
 import PrintIcon from '@mui/icons-material/Print'
@@ -20,6 +22,7 @@ import type { InvoiceStatus } from '../types/types'
 import { useListInvoices } from '../hooks/useListInvoices'
 import { useUpdateInvoiceStatus } from '../hooks/useUpdateInvoiceStatus'
 import { toast } from 'react-hot-toast'
+import {useNavigate} from 'react-router-dom'
 
 const invoiceStatuses: InvoiceStatus[] = [
     'draft',
@@ -31,8 +34,10 @@ const invoiceStatuses: InvoiceStatus[] = [
 
 export const Invoices = () => {
 
-    const { data: invoices } = useListInvoices()
+    const { data: invoices, isLoading } = useListInvoices()
     const { mutate: updateInv } = useUpdateInvoiceStatus();
+
+    const navigate = useNavigate()
 
 
 
@@ -45,6 +50,17 @@ export const Invoices = () => {
             }
         })
     }
+
+    if(isLoading) return (
+        <Stack direction='column'>
+            <Skeleton variant='text' width= 'full' height= '40px'></Skeleton>
+
+            <Skeleton variant='rectangular' width='full' height= '100px'  sx={{mb:2}}></Skeleton>
+            <Skeleton variant='rectangular' width='full' height= '100px'></Skeleton>
+
+        </Stack>
+        
+    )
 
     return (
         <Box sx={{p:4}}>
@@ -68,7 +84,12 @@ export const Invoices = () => {
 
                     <TableBody>
                         {invoices?.map((invoice) => (
-                            <TableRow key={invoice.id}>
+                            <TableRow onClick={()=> navigate(`/invoices/${invoice.id}`)} key={invoice.id} sx={{
+                               "&:hover": {
+                                    bgcolor: '#f7f5f0',
+                                    cursor: 'pointer'
+                                }
+                            }}>
                                 <TableCell>
                                     {invoice.invoice_number}
                                 </TableCell>
