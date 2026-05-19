@@ -2,7 +2,7 @@ import {useQuery} from '@tanstack/react-query'
 import { supabase } from '../../../lib/supabase'
 import type { Project } from '../types/types'
 
-export const useGetSingleProject = (projectId: string)=>{
+export const useGetSingleProject = (projectId?: string)=>{
 
     const getSingleProject = async ()=>{
         const {data, error} = await supabase.from('projects').
