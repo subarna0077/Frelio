@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/supabase'
 import { useAuthStore } from '../../auth/stores/authStore'
 import type{ InvoiceFormType } from '../components/InvoiceModalForm'
 
-export const useCreateInvoice = (client_id: string, project_id: string)=>{
+export const useCreateInvoice = (client_id?: string, project_id?: string)=>{
 
     const queryClient = useQueryClient()
 
