@@ -2,8 +2,6 @@ import { useMutation } from '@tanstack/react-query'
 import type { LoginDataType } from '../types/auth'
 import { useAuthStore } from '../stores/authStore'
 import { supabase } from '../../../lib/supabase'
-import { toast } from 'react-hot-toast'
-
 export const useLogin = () => {
 
     const setUser = useAuthStore(state => state.setUser)
@@ -30,8 +28,6 @@ export const useLogin = () => {
 
             const accessToken = data.session.access_token
             setUser(user, accessToken)
-            toast.success('Welcome to dashboard')
-        }
-
+        },
     })
 }

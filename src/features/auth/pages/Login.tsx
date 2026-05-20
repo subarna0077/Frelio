@@ -26,7 +26,7 @@ export const Login: React.FC = () => {
 
   });
 
-  const { mutate: login, isPending, error, isError, isSuccess } = useLogin();
+  const { mutate: login, isPending } = useLogin();
 
   const onSubmit =  (data: LoginDataType) => {
     login(data, {
@@ -39,15 +39,6 @@ export const Login: React.FC = () => {
       }
     });
   };
-
-    useEffect(()=>{
-    if (isError && error) {
-      toast.error(error.message)
-    }
-
-    if(isSuccess) toast.success('Logged in successfully.')
-
-  }, [isError, error, isSuccess]);
 
   if (isAuthenticated) return <Navigate to='/dashboard' />
 
