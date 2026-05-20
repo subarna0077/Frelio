@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
-    TextField, Button, Box, CircularProgress, IconButton,
+    TextField, Button, Box, IconButton,
     MenuItem,
 } from '@mui/material';
 import { CloseRounded } from '@mui/icons-material';

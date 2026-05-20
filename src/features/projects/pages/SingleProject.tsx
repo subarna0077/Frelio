@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box, Button, Typography, Card, CardContent, Chip,
   LinearProgress, List, ListItem, ListItemText, Checkbox,
@@ -120,7 +120,7 @@ export const SingleProject = () => {
       <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-            <Typography variant="h5" fontWeight={700}>{project.title}</Typography>
+            <Typography variant="h5" sx={{fontWeight:700}}>{project.title}</Typography>
             <Chip label={project.status} size="small" sx={{ bgcolor: bg, color, fontWeight: 600 }} />
           </Box>
           <Typography variant="body2" color="text.secondary">
@@ -141,7 +141,7 @@ export const SingleProject = () => {
       <Card elevation={0} sx={{ mb: 2 }}>
         <CardContent sx={{ py: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Typography variant="body2" fontWeight={600}>Progress</Typography>
+            <Typography variant="body2" sx={{fontWeight:600}}>Progress</Typography>
             <Typography variant="body2" color="text.secondary">
               {completedCount}/{milestones.length} milestones
             </Typography>
@@ -162,7 +162,7 @@ export const SingleProject = () => {
                 px: 2.5, py: 2, borderBottom: '1px solid #F0F0F0',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
-                <Typography variant="subtitle1" fontWeight={600}>
+                <Typography variant="subtitle1" sx={{fontWeight:600}}>
                   Milestones
                 </Typography>
                 <Button size="small" startIcon={<AddRounded />} onClick={() => setOpenMilestoneModal(true)}>
@@ -195,9 +195,7 @@ export const SingleProject = () => {
                         <ListItemText
                           primary={
                             <Typography
-                              variant="body2" fontWeight={500}
-                              sx={{ textDecoration: ms.is_completed ? 'line-through' : 'none', color: ms.is_completed ? 'text.secondary' : 'text.primary' }}
-                            >
+                              variant="body2" sx={{fontWeight:500, textDecoration: ms.is_completed ? 'line-through' : 'none', color: ms.is_completed ? 'text.secondary' : 'text.primary' }}                            >
                               {ms.name}
                             </Typography>
                           }
@@ -231,7 +229,7 @@ export const SingleProject = () => {
           <Card elevation={0}>
             <CardContent sx={{ p: 0 }}>
               <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid #F0F0F0' }}>
-                <Typography variant="subtitle1" fontWeight={600}>Activity Log</Typography>
+                <Typography variant="subtitle1" sx={{fontWeight:600}}>Activity Log</Typography>
               </Box>
               <Box sx={{ p: 2, position: 'relative' }}>
                 {activity.map((a, i) => (
@@ -243,7 +241,7 @@ export const SingleProject = () => {
                       )}
                     </Box>
                     <Box>
-                      <Typography variant="body2" fontWeight={500}>{a.text}</Typography>
+                      <Typography variant="body2" sx={{fontWeight:500}}>{a.text}</Typography>
                       <Typography variant="caption" color="text.secondary">{a.time}</Typography>
                     </Box>
                   </Box>

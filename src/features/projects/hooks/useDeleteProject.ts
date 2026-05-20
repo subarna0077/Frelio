@@ -1,20 +1,23 @@
-import {useMutation, useQueryClient} from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../../lib/supabase'
 
-export const useDeleteProject = ()=>{
+export const useDeleteProject = () => {
     const queryClient = useQueryClient()
 
-    const deleteProject = async (projectId?: string)=>{
-        const {error} = await supabase.from('projects').delete().eq('id', projectId)
+    const deleteProject = async (projectId?: string) => {
+        const { error } = await supabase.from('projects').delete().eq('id', projectId)
 
-        if(error) throw error;
+        if (error) throw error;
     }
 
     return useMutation({
         mutationFn: deleteProject,
-        onSuccess: ()=>{
+        onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ['projects']
+            })
+            queryClient.invalidateQueries({
+                queryKey: ['clients']
             })
         }
     })

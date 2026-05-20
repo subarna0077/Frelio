@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import { VisibilityRounded, VisibilityOffRounded, BoltRounded } from '@mui/icons-material';
 import { Navigate, Link as RouterLink } from 'react-router-dom';
-import toast, {Toaster} from 'react-hot-toast';
+import {toast} from 'react-hot-toast';
 import { useLogin } from '../hooks/useLogin';
 import { useForm } from 'react-hook-form'
 import { LoginFormSchema } from '../types/auth';
@@ -28,9 +28,16 @@ export const Login: React.FC = () => {
 
   const { mutate: login, isPending, error, isError, isSuccess } = useLogin();
 
-  const onSubmit = async (data: LoginDataType) => {
-    await login(data);
-    reset();
+  const onSubmit =  (data: LoginDataType) => {
+    login(data, {
+      onSuccess: ()=> {
+        toast.success('Logged in successfully.');
+        reset()
+      },
+      onError: (error)=>{
+        toast.error(error.message)
+      }
+    });
   };
 
     useEffect(()=>{
@@ -121,9 +128,9 @@ export const Login: React.FC = () => {
               </Button>
             </Box>
 
-            <Typography variant="body2" textAlign="center" mt={3} color="text.secondary">
+            <Typography variant="body2" sx={{ textAlign:"center", mt:3, color:"text.secondary"}}>
               Don't have an account?{' '}
-              <Link component={RouterLink} to="/register" fontWeight={600} color="primary.main" underline="hover">
+              <Link component={RouterLink} to="/register" sx={{fontWeight:600, color:"primary.main", underline:"hover"}}>
                 Create account
               </Link>
             </Typography>

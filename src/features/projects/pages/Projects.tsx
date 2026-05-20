@@ -7,17 +7,12 @@ import {
 import { AddRounded, MoreVertRounded, FolderRounded } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useGetProjects } from '../hooks/useGetProjects';
-import type { Project, ProjectStatus } from '../types/types';
+import type { Project } from '../types/types';
 import toast from 'react-hot-toast';
 import { AddProjectModal } from '../components/AddProjectModal';
 import { useProjectStore } from '../stores/ProjectStore';
 import { useDeleteProject } from '../hooks/useDeleteProject';
 
-// const statusColors: Record<ProjectStatus, { bg: string; color: string; label: string }> = {
-//   active: { bg: 'rgba(29,158,117,0.1)', color: '#1D9E75', label: 'Active' },
-//   completed: { bg: 'rgba(107,114,128,0.1)', color: '#6B7280', label: 'Completed' },
-//   'on-hold': { bg: 'rgba(245,158,11,0.1)', color: '#D97706', label: 'On Hold' },
-// };
 
 export const ProjectsPage = () => {
 
@@ -97,8 +92,8 @@ export const ProjectsPage = () => {
           ) : projects.length === 0 ? (
             <Box sx={{ py: 8, textAlign: 'center' }}>
               <FolderRounded sx={{ fontSize: 52, color: '#E0E0E0', mb: 1.5 }} />
-              <Typography variant="subtitle1" fontWeight={600} color="text.secondary">No projects yet</Typography>
-              <Typography variant="body2" color="text.secondary" mt={0.5} mb={2}>
+              <Typography variant="subtitle1" color="text.secondary" sx={{fontWeight: 600}} >No projects yet</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{mt:0.5, mb:2}}>
                 Create your first project to start tracking work
               </Typography>
               <Button variant="contained" startIcon={<AddRounded />} onClick={()=>setOpenModal(true)}>
@@ -138,7 +133,7 @@ export const ProjectsPage = () => {
                       <ListItemText
                         primary={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="body2" fontWeight={600}>{project.title}</Typography>
+                            <Typography variant="body2" sx={{fontWeight:600}}>{project.title}</Typography>
                             <Chip
                               label={project.status}
                               size="small"
@@ -147,7 +142,11 @@ export const ProjectsPage = () => {
                           </Box>
                         }
                         secondary={project.client_id || 'No client'}
-                        secondaryTypographyProps={{ variant: 'caption' }}
+                        slotProps={{
+                          secondary: {
+                            variant: 'caption'
+                          }
+                        }}   
                       />
                     </ListItem>
                     {idx < projects.length - 1 && <Divider variant="inset" component="li" />}

@@ -8,7 +8,8 @@ import {
   DashboardRounded, PeopleRounded, FolderRounded, ReceiptRounded,
   SettingsRounded, MenuRounded, CloseRounded, BoltRounded,
 } from '@mui/icons-material';
-import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuthStore } from '../../features/auth/stores/authStore';
 
 const DRAWER_WIDTH = 240;
 const COLLAPSED_WIDTH = 72;
@@ -21,13 +22,15 @@ const navItems = [
   { label: 'Settings', icon: <SettingsRounded />, path: '/settings' },
 ];
 
-const AppLayout = ({children}: {children: React.ReactNode}) => {
+const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const user = useAuthStore(state => state.user);
 
   const drawerWidth = collapsed && !isMobile ? COLLAPSED_WIDTH : DRAWER_WIDTH;
 
@@ -90,7 +93,6 @@ const AppLayout = ({children}: {children: React.ReactNode}) => {
                   {!collapsed && (
                     <ListItemText
                       primary={label}
-                      primaryTypographyProps={{ fontWeight: active ? 600 : 500, fontSize: '0.875rem' }}
                     />
                   )}
                 </ListItemButton>
@@ -105,12 +107,18 @@ const AppLayout = ({children}: {children: React.ReactNode}) => {
       {/* User Avatar Footer */}
       <Box sx={{ px: collapsed ? 1.5 : 2.5, py: 2, display: 'flex', alignItems: 'center', gap: 1.5 }}>
         <Avatar sx={{ width: 34, height: 34, bgcolor: 'primary.main', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
-          F
+          {user?.name.slice(0, 1).toUpperCase()}
         </Avatar>
         {!collapsed && (
           <Box>
-            <Typography variant="body2" fontWeight={600} color="text.primary" lineHeight={1.2}>
-              Freelancer
+            <Typography sx={{
+              textTransform:
+                'capitalize',
+              fontWeight: 600,
+              lineHeight: 1.2,
+              color: 'text.primary'
+            }}  >
+              {user?.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               NPR Account

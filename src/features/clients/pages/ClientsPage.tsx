@@ -57,8 +57,8 @@ export const Clients = () => {
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
         <Box>
-          <Typography variant="h5" fontWeight={700}>Clients</Typography>
-          <Typography variant="body2" color="text.secondary" mt={0.25}>
+          <Typography variant="h5" sx={{fontWeight:700}}>Clients</Typography>
+          <Typography variant="body2" sx={{ color:"text.secondary", mt:0.25}}>
             Manage your client relationships
           </Typography>
         </Box>
@@ -95,8 +95,8 @@ export const Clients = () => {
           ) : clients.length === 0 ? (
             <Box sx={{ py: 8, textAlign: 'center' }}>
               <PeopleRounded sx={{ fontSize: 52, color: '#E0E0E0', mb: 1.5 }} />
-              <Typography variant="subtitle1" fontWeight={600} color="text.secondary">No clients yet</Typography>
-              <Typography variant="body2" color="text.secondary" mt={0.5} mb={2}>
+              <Typography variant="subtitle1" sx={{ fontWeight:600, color:"text.secondary"}}>No clients yet</Typography>
+              <Typography variant="body2" sx={{ color:"text.secondary", mt:0.5, mb:2}}>
                 Add your first client to get started
               </Typography>
               <Button variant="contained" startIcon={<AddRounded />} onClick={() => setOpenModal(true)}>
@@ -130,7 +130,7 @@ export const Clients = () => {
                     <ListItemText
                       primary={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="body2" fontWeight={600}>{client.name}</Typography>
+                          <Typography variant="body2" sx={{fontWeight:600}}>{client.name}</Typography>
                           {client.projects.length > 0 && (
                             <Chip
                               icon={<FolderRounded sx={{ fontSize: '14px !important' }} />}

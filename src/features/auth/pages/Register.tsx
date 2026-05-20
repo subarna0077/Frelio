@@ -1,35 +1,33 @@
-import React, { useState, useEffect } from 'react';
 import {
     Box, Card, CardContent, TextField, Button, Typography,
-    Link, MenuItem, CircularProgress, Divider,
+    Link, MenuItem, Divider,
 } from '@mui/material';
 import { BoltRounded } from '@mui/icons-material';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import { RegisterFormSchema } from '../types/auth';
+import { Link as RouterLink } from 'react-router-dom';
 import type { RegisterDataType } from '../types/auth';
 import { useForm, Controller } from 'react-hook-form'
 import { useRegister } from '../hooks/useRegister';
 import {toast} from 'react-hot-toast'
 
 export const Register = () => {
-    const navigate = useNavigate();
 
     const { register, control, handleSubmit, reset } = useForm<RegisterDataType>();
 
-    const { mutate: registerFn, error, isError, isPending } = useRegister()
+    const { mutate: registerFn} = useRegister()
 
     const onSubmit = (data: RegisterDataType) => {
-        registerFn(data)
+        registerFn(data, {
+            onSuccess: ()=>{
+                toast.success("Registered successfully.")
+                reset()
+            },
+            onError: ()=>{
+                toast.error("Failed to register")
+                reset()
+            }
+
+        })
     };
-
-    useEffect(()=>{
-        if(error && isError){
-            toast(error.message)
-        }
-
-    }, [])
-
-
 
     return (
         <Box sx={{
@@ -41,13 +39,13 @@ export const Register = () => {
                     <Box sx={{ width: 40, height: 40, borderRadius: 2.5, bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <BoltRounded sx={{ color: '#fff', fontSize: 22 }} />
                     </Box>
-                    <Typography variant="h5" fontWeight={800} letterSpacing="-0.5px">Frelio</Typography>
+                    <Typography variant="h5" sx={{fontWeight:800, letterSpacing: '-0.5px'}}>Frelio</Typography>
                 </Box>
 
                 <Card elevation={0}>
                     <CardContent sx={{ p: 4 }}>
-                        <Typography variant="h5" fontWeight={700} mb={0.5}>Create your account</Typography>
-                        <Typography variant="body2" color="text.secondary" mb={3}>
+                        <Typography variant="h5" sx={{fontWeight:700, mb:0.5}}>Create your account</Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{mb:3}}>
                             Start managing your freelance business for free
                         </Typography>
 
@@ -87,9 +85,9 @@ export const Register = () => {
                             </Button>
                         </Box>
 
-                        <Typography variant="body2" textAlign="center" mt={3} color="text.secondary">
+                        <Typography variant="body2" sx={{textAlign: 'center', mt:3, color: 'text.secondary'}}>
                             Already have an account?{' '}
-                            <Link component={RouterLink} to="/login" fontWeight={600} color="primary.main" underline="hover">
+                            <Link component={RouterLink} to="/login" sx={{color:"primary.main", fontWeight: 600, underline:"hover"}}>
                                 Sign in
                             </Link>
                         </Typography>

@@ -9,7 +9,7 @@ export const useGetSingleInvoice = ()=>{
 
     const getSingleInvoice = async ()  => {
 
-        const {data, error} = await supabase.from('invoices').select('*, invoice_items(*)').eq('id', id).single();
+        const {data, error} = await supabase.from('invoices').select('*, invoice_items(*), clients(*) ').eq('id', id).single();
 
         if(error) throw new Error(error.message)
 

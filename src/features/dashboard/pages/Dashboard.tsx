@@ -1,274 +1,295 @@
+import React from 'react';
 import {
   Box,
-  Typography,
-  Grid,
   Card,
   CardContent,
+  Typography,
   Chip,
   LinearProgress,
-  Avatar,
+  Skeleton,
   List,
   ListItem,
-  ListItemAvatar,
   ListItemText,
+  Avatar,
   Divider,
-  Button,
-  Stack,
-} from '@mui/material'
+} from '@mui/material';
+
 import {
-  FolderOpen,
-  People,
-  Receipt,
-  TrendingUp,
-  CheckCircle,
-  RadioButtonUnchecked,
-  Add,
-} from '@mui/icons-material'
+  FolderRounded,
+  PeopleRounded,
+  PendingActionsRounded,
+  TrendingUpRounded,
+  FiberManualRecordRounded,
+} from '@mui/icons-material';
 
-// ── Static mock data ────────────────────────────────────────────────
-const stats = [
-  { label: 'Active Projects', value: '6', icon: <FolderOpen />, color: '#1D9E75' },
-  { label: 'Total Clients', value: '9', icon: <People />, color: '#378ADD' },
-  { label: 'Pending Payment', value: 'Rs 75,000', icon: <Receipt />, color: '#E0993A' },
-  { label: 'Earned This Month', value: 'Rs 1,20,000', icon: <TrendingUp />, color: '#9B59B6' },
-]
+import type { ProjectStatus } from '../../projects/types/types';
+import { useGetProjects } from '../../projects/hooks/useGetProjects';
+import { useGetClients } from '../../clients/hooks/useGetClients';
+import { useListInvoices } from '../../invoice/hooks/useListInvoices';
+import { useAuthStore } from '../../auth/stores/authStore';
 
-const projects = [
-  {
-    id: 1,
-    name: 'Momo Palace Website',
-    client: 'Sita Maharjan',
-    budget: 'Rs 50,000',
-    progress: 60,
-    status: 'active',
-    deadline: 'June 15',
-    milestoneDone: 3,
-    milestoneTotal: 5,
-  },
-  {
-    id: 2,
-    name: 'E-commerce Dashboard',
-    client: 'John Smith',
-    budget: '$800',
-    progress: 90,
-    status: 'payment due',
-    deadline: 'May 30',
-    milestoneDone: 4,
-    milestoneTotal: 4,
-  },
-  {
-    id: 3,
-    name: 'Travel Agency Redesign',
-    client: 'Bikram Thapa',
-    budget: 'Rs 35,000',
-    progress: 25,
-    status: 'active',
-    deadline: 'July 1',
-    milestoneDone: 1,
-    milestoneTotal: 4,
-  },
-]
-
-const activities = [
-  {
-    id: 1,
-    message: 'Milestone 3 completed — Momo Palace Website',
-    time: 'Today, 10:42 AM',
-    color: '#1D9E75',
-    done: true,
-  },
-  {
-    id: 2,
-    message: 'Invoice #004 sent to John Smith · $800',
-    time: 'Yesterday, 4:15 PM',
-    color: '#378ADD',
-    done: true,
-  },
-  {
-    id: 3,
-    message: 'Payment received · Rs 20,000 from Sita (Esewa)',
-    time: 'May 4, 2:30 PM',
-    color: '#E0993A',
-    done: true,
-  },
-  {
-    id: 4,
-    message: 'New project created — Travel Agency Redesign',
-    time: 'May 3, 9:00 AM',
-    color: '#9B59B6',
-    done: false,
-  },
-]
-
-const statusColor: Record<string, 'success' | 'warning' | 'default'> = {
+const statusColor: Record<ProjectStatus, 'success' | 'warning' | 'default'> = {
   active: 'success',
-  'payment due': 'warning',
   completed: 'default',
-}
+  'on-hold': 'warning',
+};
 
-// ── Component ────────────────────────────────────────────────────────
+const StatCard: React.FC<{
+  label: string;
+  value: string | number;
+  icon: React.ReactNode;
+  color: string;
+  loading?: boolean;
+}> = ({ label, value, icon, color, loading }) => (
+  <Card elevation={0} sx={{ flex: 1, minWidth: 220 }}>
+    <CardContent sx={{ p: 2.5 }}>
+      {loading ? (
+        <>
+          <Skeleton width={40} height={40} variant="rounded" sx={{ mb: 1.5 }} />
+          <Skeleton width="60%" height={32} />
+          <Skeleton width="80%" height={20} />
+        </>
+      ) : (
+        <>
+          <Box
+            sx={{
+              width: 44,
+              height: 44,
+              borderRadius: 2,
+              bgcolor: `${color}18`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mb: 1.5,
+              color,
+            }}
+          >
+            {icon}
+          </Box>
+
+          <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
+            {value}
+          </Typography>
+
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+            {label}
+          </Typography>
+        </>
+      )}
+    </CardContent>
+  </Card>
+);
+
 export const Dashboard = () => {
+  const { data: projects = [], isLoading: projLoading } = useGetProjects();
+  const { data: clients = [], isLoading: clientLoading } = useGetClients();
+  const { data: invoices = [], isLoading: invLoading } = useListInvoices();
+
+  const user = useAuthStore(state => state.user);
+
+  const loading = projLoading || clientLoading || invLoading;
+
+  const activeProjects = projects.filter(p => p.status === 'active');
+
+  const pendingPayments = invoices.filter(
+    i => i.status === 'draft' || i.status === 'overdue'
+  );
+
+  const paidThisMonth = invoices
+    .filter(i => i.status === 'paid')
+    .reduce((sum, i) => sum + i.total, 0);
+
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+  const activities = [
+    { text: 'Invoice #INV-003 marked as paid', time: '2h ago', color: '#1D9E75' },
+    { text: 'Milestone "Design handoff" completed', time: '5h ago', color: '#3B82F6' },
+    { text: 'New project "E-commerce site" created', time: '1d ago', color: '#F59E0B' },
+    { text: 'Client "Ram Bahadur" added', time: '2d ago', color: '#8B5CF6' },
+  ];
+
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1200, mx: 'auto' }}>
-
+    <Box>
       {/* Header */}
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
-        <Box>
-          <Typography variant="h5" fontWeight={600} color="text.primary">
-            Good morning, Ram 👋
-          </Typography>
-          <Typography variant="body2" color="text.secondary" mt={0.5}>
-            Here's what's happening with your projects today.
-          </Typography>
-        </Box>
-        <Stack direction="row" gap={1}>
-          <Button variant="outlined" size="small" startIcon={<Add />}>
-            New Client
-          </Button>
-          <Button variant="contained" size="small" startIcon={<Add />}>
-            New Project
-          </Button>
-        </Stack>
-      </Stack>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+          {greeting}, {user?.name?.toUpperCase()} 👋
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+          Here's what's happening with your projects today.
+        </Typography>
+      </Box>
 
-      {/* Stat cards */}
-      <Grid container spacing={2} mb={4}>
-        {stats.map((stat) => (
-          <Grid item xs={12} sm={6} md={3} key={stat.label}>
-            <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
-              <CardContent>
-                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                  <Box>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      {stat.label}
-                    </Typography>
-                    <Typography variant="h5" fontWeight={700} color="text.primary">
-                      {stat.value}
-                    </Typography>
-                  </Box>
-                  <Avatar sx={{ bgcolor: `${stat.color}18`, color: stat.color, width: 40, height: 40 }}>
-                    {stat.icon}
-                  </Avatar>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
+      {/* STAT CARDS (FLEX INSTEAD OF GRID) */}
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 2,
+          flexWrap: 'wrap',
+          mb: 3,
+        }}
+      >
+        {[
+          {
+            label: 'Active Projects',
+            value: loading ? '-' : activeProjects.length,
+            icon: <FolderRounded />,
+            color: '#1D9E75',
+          },
+          {
+            label: 'Total Clients',
+            value: loading ? '-' : clients.length,
+            icon: <PeopleRounded />,
+            color: '#3B82F6',
+          },
+          {
+            label: 'Pending Payments',
+            value: loading ? '-' : pendingPayments.length,
+            icon: <PendingActionsRounded />,
+            color: '#F59E0B',
+          },
+          {
+            label: 'Earned This Month',
+            value: loading ? '-' : `NPR ${paidThisMonth.toLocaleString()}`,
+            icon: <TrendingUpRounded />,
+            color: '#8B5CF6',
+          },
+        ].map(card => (
+          <StatCard key={card.label} {...card} loading={loading} />
         ))}
-      </Grid>
+      </Box>
 
-      {/* Projects + Activity */}
-      <Grid container spacing={3}>
-
-        {/* Active projects */}
-        <Grid item xs={12} md={7}>
-          <Card variant="outlined" sx={{ borderRadius: 3 }}>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="subtitle1" fontWeight={600}>
+      {/* MAIN CONTENT */}
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 2,
+          flexWrap: 'wrap',
+        }}
+      >
+        {/* Active Projects */}
+        <Box sx={{ flex: 2, minWidth: 320 }}>
+          <Card elevation={0}>
+            <CardContent sx={{ p: 0 }}>
+              <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid #F0F0F0' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                   Active Projects
                 </Typography>
-                <Button size="small" variant="text">View all</Button>
-              </Stack>
+              </Box>
 
-              <Stack gap={2}>
-                {projects.map((project) => (
-                  <Box
-                    key={project.id}
-                    sx={{
-                      p: 2,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      borderRadius: 2,
-                      '&:hover': { borderColor: 'primary.main', cursor: 'pointer' },
-                      transition: 'border-color 0.15s'
-                    }}
-                  >
-                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                      <Box>
-                        <Typography variant="body2" fontWeight={600} color="text.primary">
-                          {project.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {project.client} · {project.budget}
-                        </Typography>
-                      </Box>
-                      <Chip
-                        label={project.status}
-                        size="small"
-                        color={statusColor[project.status]}
-                        sx={{ fontSize: 11, height: 22 }}
-                      />
-                    </Stack>
+              {loading ? (
+                <Box sx={{ p: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {[1, 2, 3].map(i => (
+                    <Skeleton key={i} height={60} variant="rounded" />
+                  ))}
+                </Box>
+              ) : activeProjects.length === 0 ? (
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                  <FolderRounded sx={{ fontSize: 40, color: '#E0E0E0', mb: 1 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    No active projects
+                  </Typography>
+                </Box>
+              ) : (
+                <List disablePadding>
+                  {activeProjects.map((project, idx) => {
+                    const progress = 0;
 
-                    <LinearProgress
-                      variant="determinate"
-                      value={project.progress}
-                      sx={{
-                        height: 4,
-                        borderRadius: 99,
-                        bgcolor: 'action.hover',
-                        mb: 1,
-                        '& .MuiLinearProgress-bar': { borderRadius: 99 }
-                      }}
-                    />
+                    return (
+                      <React.Fragment key={project.id}>
+                        <ListItem sx={{ px: 2.5, py: 1.5 }}>
+                          <Box sx={{ flex: 1 }}>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                mb: 0.5,
+                              }}
+                            >
+                              <Typography
+                                variant="body2"
+                                sx={{ fontWeight: 600 }}
+                                noWrap
+                              >
+                                {project.title}
+                              </Typography>
 
-                    <Stack direction="row" justifyContent="space-between">
-                      <Typography variant="caption" color="text.secondary">
-                        {project.milestoneDone} of {project.milestoneTotal} milestones
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Due {project.deadline}
-                      </Typography>
-                    </Stack>
-                  </Box>
-                ))}
-              </Stack>
+                              <Chip
+                                label={project.status}
+                                size="small"
+                                color={statusColor[project.status]}
+                                sx={{ height: 20 }}
+                              />
+                            </Box>
+
+                            <Typography variant="caption" color="text.secondary">
+                              {project.clients?.name || 'No client'}
+                            </Typography>
+
+                            <LinearProgress
+                              variant="determinate"
+                              value={progress}
+                              sx={{
+                                mt: 1,
+                                height: 4,
+                                borderRadius: 2,
+                                bgcolor: '#F0F0F0',
+                              }}
+                            />
+                          </Box>
+                        </ListItem>
+
+                        {idx < activeProjects.length - 1 && <Divider />}
+                      </React.Fragment>
+                    );
+                  })}
+                </List>
+              )}
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
-        {/* Activity log */}
-        <Grid item xs={12} md={5}>
-          <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
-            <CardContent>
-              <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                Recent Activity
-              </Typography>
+        {/* Activity Feed */}
+        <Box sx={{ flex: 1, minWidth: 280 }}>
+          <Card elevation={0}>
+            <CardContent sx={{ p: 0 }}>
+              <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid #F0F0F0' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  Recent Activity
+                </Typography>
+              </Box>
 
               <List disablePadding>
-                {activities.map((activity, index) => (
-                  <Box key={activity.id}>
-                    <ListItem disablePadding sx={{ py: 1, alignItems: 'flex-start' }}>
-                      <ListItemAvatar sx={{ minWidth: 36, mt: 0.5 }}>
-                        {activity.done
-                          ? <CheckCircle sx={{ fontSize: 18, color: activity.color }} />
-                          : <RadioButtonUnchecked sx={{ fontSize: 18, color: 'text.disabled' }} />
-                        }
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Typography variant="body2" color="text.primary" lineHeight={1.5}>
-                            {activity.message}
-                          </Typography>
-                        }
-                        secondary={
-                          <Typography variant="caption" color="text.secondary">
-                            {activity.time}
-                          </Typography>
-                        }
-                      />
+                {activities.map((a, i) => (
+                  <React.Fragment key={i}>
+                    <ListItem sx={{ px: 2.5, py: 1.5 }}>
+                      <Avatar
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          bgcolor: `${a.color}18`,
+                          mr: 1.5,
+                        }}
+                      >
+                        <FiberManualRecordRounded
+                          sx={{ fontSize: 12, color: a.color }}
+                        />
+                      </Avatar>
+
+                      <ListItemText primary={a.text} secondary={a.time} />
                     </ListItem>
-                    {index < activities.length - 1 && (
-                      <Divider variant="inset" component="li" sx={{ ml: 4.5 }} />
-                    )}
-                  </Box>
+
+                    {i < activities.length - 1 && <Divider />}
+                  </React.Fragment>
                 ))}
               </List>
             </CardContent>
           </Card>
-        </Grid>
-
-      </Grid>
+        </Box>
+      </Box>
     </Box>
-  )
-}
+  );
+};

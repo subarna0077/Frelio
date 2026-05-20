@@ -22,7 +22,7 @@ import type { InvoiceStatus } from '../types/types'
 import { useListInvoices } from '../hooks/useListInvoices'
 import { useUpdateInvoiceStatus } from '../hooks/useUpdateInvoiceStatus'
 import { toast } from 'react-hot-toast'
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 const invoiceStatuses: InvoiceStatus[] = [
     'draft',
@@ -51,20 +51,25 @@ export const Invoices = () => {
         })
     }
 
-    if(isLoading) return (
+    if (isLoading) return (
         <Stack direction='column'>
-            <Skeleton variant='text' width= 'full' height= '40px'></Skeleton>
+            <Skeleton variant='text' width='full' height='40px'></Skeleton>
 
-            <Skeleton variant='rectangular' width='full' height= '100px'  sx={{mb:2}}></Skeleton>
-            <Skeleton variant='rectangular' width='full' height= '100px'></Skeleton>
+            <Skeleton variant='rectangular' width='full' height='100px' sx={{ mb: 2 }}></Skeleton>
+            <Skeleton variant='rectangular' width='full' height='100px'></Skeleton>
 
         </Stack>
-        
+
     )
 
+    if (invoices?.length === 0) return
+     <p>
+        No invoices available. Add invoice from project detail page.
+    </p>
+
     return (
-        <Box sx={{p:4}}>
-            <Typography variant="h4" sx={{mb:3}}>
+        <Box sx={{ p: 4 }}>
+            <Typography variant="h4" sx={{ mb: 3 }}>
                 Invoices
             </Typography>
 
@@ -84,8 +89,8 @@ export const Invoices = () => {
 
                     <TableBody>
                         {invoices?.map((invoice) => (
-                            <TableRow onClick={()=> navigate(`/invoices/${invoice.id}`)} key={invoice.id} sx={{
-                               "&:hover": {
+                            <TableRow onClick={() => navigate(`/invoices/${invoice.id}`)} key={invoice.id} sx={{
+                                "&:hover": {
                                     bgcolor: '#f7f5f0',
                                     cursor: 'pointer'
                                 }
@@ -114,7 +119,11 @@ export const Invoices = () => {
                                     <Select
                                         size="small"
                                         value={invoice.status}
-                                        onChange={(e) => handleStatusChange(invoice.id, e.target.value as InvoiceStatus)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        onChange={(e) => {
+                                            handleStatusChange(invoice.id, e.target.value as InvoiceStatus)
+
+                                        }}
                                     >
                                         {invoiceStatuses.map((status, index) =>
                                             <MenuItem key={index} value={status}>

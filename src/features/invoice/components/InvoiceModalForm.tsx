@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-    Box, Dialog, DialogTitle, DialogContent, DialogActions,
+    Box, Dialog, DialogContent, DialogActions,
     Typography, Divider, Stack, TextField, List, ListItem,
     ListItemText, IconButton, Button, Chip, Checkbox, Tooltip,
     CircularProgress, Paper,
@@ -25,7 +25,7 @@ import type { Invoice } from '../types/types';
 export const InvoiceItemSchema = z.object({
     description: z.string().min(1, 'Description is required'),
     amount: z
-        .number({ invalid_type_error: 'Enter a valid amount' })
+        .number({ error: 'Enter a valid amount' })
         .min(1, 'Must be greater than 0'),
 });
 
@@ -131,7 +131,7 @@ export const InvoiceModalForm = ({ client_id, project_data, milestone_data }: Pr
                             <ReceiptRounded sx={{ color: '#fff', fontSize: 20 }} />
                         </Box>
                         <Box>
-                            <Typography variant="h6" fontWeight={700} color="#fff" lineHeight={1.2}>
+                            <Typography variant="h6" sx={{fontWeight:700, color: '#fff', lineHeight: 1.2}} >
                                 Create Invoice
                             </Typography>
                             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.75)' }}>
@@ -173,7 +173,7 @@ export const InvoiceModalForm = ({ client_id, project_data, milestone_data }: Pr
 
                     {/* Due Date */}
                     <Box>
-                        <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
                             Due Date
                         </Typography>
                         <TextField
@@ -199,7 +199,7 @@ export const InvoiceModalForm = ({ client_id, project_data, milestone_data }: Pr
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                                     <FlagRounded sx={{ fontSize: 16, color: 'primary.main' }} />
-                                    <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
                                         Completed Milestones
                                     </Typography>
                                 </Box>
@@ -237,10 +237,10 @@ export const InvoiceModalForm = ({ client_id, project_data, milestone_data }: Pr
                                                     />
                                                     <ListItemText
                                                         primary={
-                                                            <Typography variant="body2" fontWeight={500}>{milestone.name}</Typography>
+                                                            <Typography variant="body2" sx={{fontWeight:500}}>{milestone.name}</Typography>
                                                         }
                                                     />
-                                                    <Typography variant="body2" fontWeight={600} color={isSelected ? 'primary.main' : 'text.secondary'}>
+                                                    <Typography variant="body2" sx={{fontWeight:600}} color={isSelected ? 'primary.main' : 'text.secondary'}>
                                                         NPR {milestone.amount?.toLocaleString()}
                                                     </Typography>
                                                 </ListItem>
@@ -270,7 +270,7 @@ export const InvoiceModalForm = ({ client_id, project_data, milestone_data }: Pr
                     {/* Line Items */}
                     <Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            <Typography variant="caption" sx={{fontWeight:600,  textTransform: 'uppercase', letterSpacing: '0.05em'}} color="text.secondary">
                                 Invoice Items
                             </Typography>
                             {errors.items?.root && (
@@ -285,7 +285,7 @@ export const InvoiceModalForm = ({ client_id, project_data, milestone_data }: Pr
                             <Box sx={{ width: 36 }} />
                         </Box>
 
-                        <Stack gap={1}>
+                        <Stack sx={{gap:1}}>
                             {fields.map((field, index) => (
                                 <Box key={field.id} sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
                                     <TextField
@@ -338,8 +338,8 @@ export const InvoiceModalForm = ({ client_id, project_data, milestone_data }: Pr
                         bgcolor: '#F8FAF9', border: '1px solid #E5E7EB',
                         borderRadius: 2, px: 2.5, py: 1.5,
                     }}>
-                        <Typography variant="body2" color="text.secondary" fontWeight={500}>Total</Typography>
-                        <Typography variant="h6" fontWeight={700} color="primary.main">
+                        <Typography variant="body2" color="text.secondary" sx={{fontWeight:500}}>Total</Typography>
+                        <Typography variant="h6" sx={{fontWeight:700}} color="primary.main">
                             NPR {total.toLocaleString()}
                         </Typography>
                     </Box>

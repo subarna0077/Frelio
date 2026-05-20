@@ -15,6 +15,7 @@ import {
 
 import { useGetSingleInvoice } from '../hooks/useGetSingleInvoice'
 import type { InvoiceStatus } from '../types/types'
+import { useAuthStore } from '../../auth/stores/authStore'
 
 const getStatusColor = (status: InvoiceStatus) => {
   switch (status) {
@@ -33,17 +34,20 @@ const getStatusColor = (status: InvoiceStatus) => {
 
 export const InvoiceDetail = () => {
   const { data: invoice } = useGetSingleInvoice()
+  const user = useAuthStore(state => state.user)
+  console.log(invoice)
 
   if (!invoice) return <Typography>Loading...</Typography>
 
   return (
     <Box sx={{ p: 4 }}>
       {/* HEADER */}
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={3}
+      <Stack sx={{
+        direction: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        mb: 3
+      }}
       >
         <Box>
           <Typography variant="h4">
@@ -77,6 +81,17 @@ export const InvoiceDetail = () => {
           </Typography>
 
           <Typography>
+            <b>Client Name:</b> {invoice.clients?.name}
+          </Typography>
+
+          <Typography sx={{
+            textTransform:
+              'capitalize'
+          }} >
+            <b>Sent by</b>: {user?.name}
+          </Typography>
+
+          <Typography>
             <b>Project ID:</b> {invoice.project_id}
           </Typography>
         </Stack>
@@ -84,7 +99,7 @@ export const InvoiceDetail = () => {
 
       {/* ITEMS */}
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" mb={2}>
+        <Typography variant="h6" sx={{mb:2}}>
           Invoice Items
         </Typography>
 
@@ -112,7 +127,7 @@ export const InvoiceDetail = () => {
 
         <Divider sx={{ my: 2 }} />
 
-        <Stack direction="row" justifyContent="flex-end">
+        <Stack sx={{direction:"row", justifyContent:"flex-end"}}>
           <Typography variant="h6">
             Total: Rs. {invoice.total}
           </Typography>
