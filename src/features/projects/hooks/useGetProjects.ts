@@ -8,7 +8,7 @@ export const useGetProjects = ()=>{
     const user = useAuthStore(state=> state.user)
 
     const getProjects = async ()=>{
-        const {data: projects, error} = await supabase.from('projects').select('*').eq('user_id', user?.id);
+        const {data: projects, error} = await supabase.from('projects').select('* , milestones(*)').eq('user_id', user?.id);
         if(error) throw error;
         // why we throw here and no return
         return projects ?? [];

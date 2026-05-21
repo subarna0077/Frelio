@@ -1,5 +1,6 @@
 import {z} from 'zod'
 import type { Client } from '../../clients/types/types'
+import type { Milestone } from '../../milestone/types/types'
 
 export const AddProjectSchema = z.object({
     title: z.string().min(8, 'Add a detailed title.'),
@@ -19,5 +20,6 @@ export type Project = {
     status: ProjectStatus
     created_at: string
     clients: Pick<Client, 'id' | 'name' | 'phone'> | null
+    milestones?: Milestone[]
 }
 
