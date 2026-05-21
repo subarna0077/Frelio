@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box, Button, Typography, Card, CardContent, Chip,
   LinearProgress, List, ListItem, ListItemText, Checkbox,
@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import {
   ArrowBackRounded, AddRounded, ReceiptRounded,
-  FlagRounded, CheckCircleRounded, RadioButtonUncheckedRounded,DeleteRounded
+  FlagRounded, CheckCircleRounded, RadioButtonUncheckedRounded, DeleteRounded
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useGetSingleProject } from '../hooks/useGetSingleProject';
@@ -17,11 +17,16 @@ import { MilestoneModalForm } from '../../milestone/components/MilestoneModalFor
 import { useDeleteMilestone } from '../../milestone/hooks/useDeleteMilestone';
 import { useMilestoneStore } from '../../milestone/stores/milestoneStore';
 import { useInvoiceStore } from '../../invoice/stores/InvoiceStore';
+import type { Milestone } from '../../milestone/types/types';
+
 
 import InvoiceModalForm from '../../invoice/components/InvoiceModalForm';
 
+import { WarningDialog } from '../../../shared/components/WarningDialog';
 
 import toast from 'react-hot-toast';
+
+import { useWarningDialogStore } from '../../../shared/hooks/useWarningDialogStore';
 
 const statusColors: Record<ProjectStatus, { bg: string; color: string }> = {
   active: { bg: 'rgba(29,158,117,0.1)', color: '#1D9E75' },
@@ -35,21 +40,26 @@ export const SingleProject = () => {
   const { data: project, isLoading: projLoading } = useGetSingleProject(id!);
   const { data: milestones = [], isLoading: msLoading } = useListMilestones(id!);
   const { mutate: completeMilestone } = useCompleteMilestone();
-  const {mutate: deleteMilestone} = useDeleteMilestone();
+  const { mutate: deleteMilestone } = useDeleteMilestone();
 
 
   // Milestone store modal 
-  const openMilestoneModal = useMilestoneStore(state=> state.openModal)
-  const setOpenMilestoneModal = useMilestoneStore(state=> state.setOpenModal)
+  const openMilestoneModal = useMilestoneStore(state => state.openModal)
+  const setOpenMilestoneModal = useMilestoneStore(state => state.setOpenModal)
 
 
   // Invoice modal store 
-  const openInvoiceModal = useInvoiceStore(state=> state.openModal)
-  const setOpenInvoiceModal = useInvoiceStore(state=> state.setOpenModal)
+  const openInvoiceModal = useInvoiceStore(state => state.openModal)
+  const setOpenInvoiceModal = useInvoiceStore(state => state.setOpenModal)
+
+  // dialog modal store
+  const dialogType = useWarningDialogStore(state => state.type)
+  const setDialogType = useWarningDialogStore(state => state.setType)
+
+  // milestone selection to delete
+  const [currentMs, setCurrentMs] = useState<Milestone | null>(null);
 
 
-
-  
 
   const loading = projLoading || msLoading;
   const completedCount = milestones.filter(m => m.is_completed).length;
@@ -63,12 +73,20 @@ export const SingleProject = () => {
     });
   };
 
+  const handleCloseDialog = () => {
+    setDialogType('none');
+    setCurrentMs(null)
+  }
+
+
   const handleDeleteMilestone = (msId: string) => {
     deleteMilestone(msId, {
-      onSuccess: ()=> {
+      onSuccess: () => {
         toast.success('Deleted milestone successfully.')
+        setDialogType('none')
+        setCurrentMs(null)
       },
-      onError: (error)=>{
+      onError: (error) => {
         toast.error(error.message)
       }
     })
@@ -120,7 +138,7 @@ export const SingleProject = () => {
       <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-            <Typography variant="h5" sx={{fontWeight:700}}>{project.title}</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>{project.title}</Typography>
             <Chip label={project.status} size="small" sx={{ bgcolor: bg, color, fontWeight: 600 }} />
           </Box>
           <Typography variant="body2" color="text.secondary">
@@ -131,7 +149,7 @@ export const SingleProject = () => {
         <Button
           variant="contained"
           startIcon={<ReceiptRounded />}
-          onClick={()=> setOpenInvoiceModal(true)} 
+          onClick={() => setOpenInvoiceModal(true)}
         >
           Create invoice
         </Button>
@@ -141,7 +159,7 @@ export const SingleProject = () => {
       <Card elevation={0} sx={{ mb: 2 }}>
         <CardContent sx={{ py: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Typography variant="body2" sx={{fontWeight:600}}>Progress</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>Progress</Typography>
             <Typography variant="body2" color="text.secondary">
               {completedCount}/{milestones.length} milestones
             </Typography>
@@ -162,7 +180,7 @@ export const SingleProject = () => {
                 px: 2.5, py: 2, borderBottom: '1px solid #F0F0F0',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
-                <Typography variant="subtitle1" sx={{fontWeight:600}}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                   Milestones
                 </Typography>
                 <Button size="small" startIcon={<AddRounded />} onClick={() => setOpenMilestoneModal(true)}>
@@ -195,7 +213,7 @@ export const SingleProject = () => {
                         <ListItemText
                           primary={
                             <Typography
-                              variant="body2" sx={{fontWeight:500, textDecoration: ms.is_completed ? 'line-through' : 'none', color: ms.is_completed ? 'text.secondary' : 'text.primary' }}                            >
+                              variant="body2" sx={{ fontWeight: 500, textDecoration: ms.is_completed ? 'line-through' : 'none', color: ms.is_completed ? 'text.secondary' : 'text.primary' }}                            >
                               {ms.name}
                             </Typography>
                           }
@@ -210,8 +228,11 @@ export const SingleProject = () => {
                           <Chip label="Done" size="small" color="success" sx={{ height: 20 }} />
                         )}
                         {!ms.is_completed && (
-                          <IconButton onClick={()=>handleDeleteMilestone(ms.id)}>
-                            <DeleteRounded/>
+                          <IconButton onClick={() => {
+                            setCurrentMs(ms)
+                            setDialogType('milestoneDelete')
+                          }}>
+                            <DeleteRounded />
                           </IconButton>
                         )}
                       </ListItem>
@@ -229,7 +250,7 @@ export const SingleProject = () => {
           <Card elevation={0}>
             <CardContent sx={{ p: 0 }}>
               <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid #F0F0F0' }}>
-                <Typography variant="subtitle1" sx={{fontWeight:600}}>Activity Log</Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Activity Log</Typography>
               </Box>
               <Box sx={{ p: 2, position: 'relative' }}>
                 {activity.map((a, i) => (
@@ -241,7 +262,7 @@ export const SingleProject = () => {
                       )}
                     </Box>
                     <Box>
-                      <Typography variant="body2" sx={{fontWeight:500}}>{a.text}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>{a.text}</Typography>
                       <Typography variant="caption" color="text.secondary">{a.time}</Typography>
                     </Box>
                   </Box>
@@ -252,13 +273,22 @@ export const SingleProject = () => {
         </Box>
       </Box>
 
-      {openMilestoneModal && <MilestoneModalForm projectId={id}/>}
+      {openMilestoneModal && <MilestoneModalForm projectId={id} />}
 
-      {openInvoiceModal && <InvoiceModalForm client_id={project.client_id} project_data={project} milestone_data={milestones}/>}
+      {openInvoiceModal && <InvoiceModalForm client_id={project.client_id} project_data={project} milestone_data={milestones} />}
 
-     
+      {dialogType === 'milestoneDelete' && <WarningDialog
+        handleConfirm={() => {
+          if(!currentMs) return;
+          handleDeleteMilestone(currentMs.id)
+        }}
+        handleCancel={handleCloseDialog}
+        message='Are you sure you want to delete this milestone? This action cannot be undone.'
+        title='Delete milestone' />}
 
-      
+
+
+
     </Box>
   );
 };

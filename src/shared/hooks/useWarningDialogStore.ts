@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-type WarningDialogType = 'none' | 'edit' | 'delete';
+type WarningDialogType = 'none' | 'edit' | 'delete' | 'milestoneDelete';
 
 export type WarningDialogStoreType = {
     type: WarningDialogType;
