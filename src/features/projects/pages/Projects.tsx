@@ -12,12 +12,18 @@ import toast from 'react-hot-toast';
 import { AddProjectModal } from '../components/AddProjectModal';
 import { useProjectStore } from '../stores/ProjectStore';
 import { useDeleteProject } from '../hooks/useDeleteProject';
+import { useWarningDialogStore } from '../../../shared/hooks/useWarningDialogStore';
+import { WarningDialog } from '../../../shared/components/WarningDialog';
 
 
 export const ProjectsPage = () => {
 
-  const open = useProjectStore(state => state.openModal)
-  const setOpenModal = useProjectStore(state => state.setOpenModal)
+  const openProjectModal = useProjectStore(state => state.openModal)
+  const setOpenProjectModal = useProjectStore(state => state.setOpenModal)
+
+  const warningType = useWarningDialogStore(state=> state.type);
+  const setWarningType = useWarningDialogStore(state => state.setType);
+
 
   const navigate = useNavigate();
   const { data: projects = [], isLoading: projLoading } = useGetProjects();
@@ -33,23 +39,34 @@ export const ProjectsPage = () => {
 
   const handleEdit = () => {
     setMenuAnchor(null);
-    setOpenModal(true);
+    setOpenProjectModal(true);
   }
 
   const handleDelete = () => {
+    setWarningType('delete')
     setMenuAnchor(null);
+  }
 
-    if (!selectedProject?.id) return;
-
+  const handleConfirm = ()=> {
+    if(!selectedProject?.id) return;
+    
     deleteProject(selectedProject.id, {
-      onSuccess: () => {
+      onSuccess: ()=> {
         toast.success('Project deleted successfully.')
         setSelectedProject(null)
+        setWarningType('none')
       },
-      onError: () => {
+      onError: ()=> {
         toast.error('Error deleting project.')
       }
     })
+
+
+  }
+
+  const handleCancel = () => {
+    setWarningType('none')
+  
   }
 
   const resetForm = () => {
@@ -69,7 +86,7 @@ export const ProjectsPage = () => {
             {projects.length} total project{projects.length !== 1 ? 's' : ''}
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddRounded />} onClick={() => setOpenModal(true)}>
+        <Button variant="contained" startIcon={<AddRounded />} onClick={() => setOpenProjectModal(true)}>
           New project
         </Button>
       </Box>
@@ -96,7 +113,7 @@ export const ProjectsPage = () => {
               <Typography variant="body2" color="text.secondary" sx={{mt:0.5, mb:2}}>
                 Create your first project to start tracking work
               </Typography>
-              <Button variant="contained" startIcon={<AddRounded />} onClick={()=>setOpenModal(true)}>
+              <Button variant="contained" startIcon={<AddRounded />} onClick={()=>setOpenProjectModal(true)}>
                 New project
               </Button>
             </Box>
@@ -175,16 +192,11 @@ export const ProjectsPage = () => {
         </MenuItem>
       </Menu>
 
-      {/* <ProjectModal
-        open={modalOpen}
-        onClose={() => { setModalOpen(false); setEditProject(null); }}
-        onSubmit={handleCreate}
-        loading={creating}
-        clients={clients}
-        project={editProject}
-      /> */}
 
-      {open && <AddProjectModal initialData={selectedProject} resetForm={resetForm} />}
+      {openProjectModal && <AddProjectModal initialData={selectedProject} resetForm={resetForm} />}
+
+      {warningType==='delete' && <WarningDialog title="Delete project" handleConfirm={handleConfirm} handleCancel={handleCancel} message="Do you really want to delete this project?"/>}
+
     </Box>
   );
 };

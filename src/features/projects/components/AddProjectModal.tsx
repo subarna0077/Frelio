@@ -32,43 +32,49 @@ export const AddProjectModal = ({ initialData, resetForm }: AddProjectModalProps
     const open = useProjectStore(state => state.openModal)
     const setOpenModal = useProjectStore(state => state.setOpenModal)
 
-    const openWarningDialog = useWarningDialogStore(state => state.openModal)
-    const setOpenWarningDialog = useWarningDialogStore(state => state.setOpenModal)
+    const warningType = useWarningDialogStore(state => state.type)
 
-
+    const setWarningType = useWarningDialogStore(state => state.setType)
 
     const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+    const [dialogMessage, setDialogMessage] = useState('');
     // check if milestones are completed or not
 
-   
+    const handleDialogMessage = (count: number) => {
+        return `You have ${count}milestone${count === 1 ? ' ' : 's'} left. Do you still want to continue?`
 
-    const handleStatusChange = (e: any, onChange: (...event: any[]) => void) => {
-        const value = e.target.value;
-
-        const unfinishedMilestones = initialData?.milestones?.filter(ml => !ml.is_completed).length;
-
-       
-
-        if (value === 'completed' && unfinishedMilestones) {
-            setPendingStatus(value);
-            setOpenWarningDialog(true);
-
-
-            return;
-        }
-
-        onChange(value);
     }
+
+    const handleStatusChange = (e: React.ChangeEvent<HTMLInputElement>, onChange: (value: string) => void) => {
+        const value = e.target.value;
+        if (value === 'completed') {
+            const pendingMlCount = initialData?.milestones?.filter(ml => !ml.is_completed).length;
+            const message = handleDialogMessage(pendingMlCount ?? 0)
+            setDialogMessage(message ?? '')
+
+            if ((pendingMlCount ?? 0) > 0) {
+
+                setPendingStatus(value);
+                setWarningType('edit');
+                return;
+            }
+        }
+        onChange(value)
+    }
+
+
 
     const handleConfirm = () => {
         setValue('status', pendingStatus ?? '')
-        setPendingStatus(null)
-        setOpenWarningDialog(false);
+        setWarningType('none');
+        setPendingStatus(null) // clearing state up after work is done.
     }
 
     const handleCancel = () => {
-        setOpenWarningDialog(false);
+        setWarningType('none')
+        setPendingStatus(null)
     }
+
 
 
     const handleFormClose = () => {
@@ -143,11 +149,7 @@ export const AddProjectModal = ({ initialData, resetForm }: AddProjectModalProps
                     </TextField>
 
                     <Controller name='status' control={control} render={({ field }) => (
-                        <TextField {...field} select label="Status" fullWidth onChange={(e) => {
-                            handleStatusChange(e, field.onChange)
-
-
-                        }}>
+                        <TextField {...field} select label="Status" fullWidth onChange={(e) => handleStatusChange(e, field.onChange)}>
                             <MenuItem value="active">Active</MenuItem>
                             <MenuItem value="on-hold">On Hold</MenuItem>
                             <MenuItem value="completed">Completed</MenuItem>
@@ -169,11 +171,11 @@ export const AddProjectModal = ({ initialData, resetForm }: AddProjectModalProps
                 </Button>
                 <Button variant="contained" type='submit'>
                     {initialData ? 'Edit project' : 'Create project'}
-                    {/* {loading ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : project ? 'Save changes' : 'Create project'} */}
                 </Button>
             </DialogActions>
 
-            {openWarningDialog && <WarningDialog onConfirm={handleConfirm} onCancel={handleCancel} />}
+            {warningType==='edit' && <WarningDialog handleConfirm={handleConfirm} handleCancel={handleCancel} message={dialogMessage} />}
+
         </Dialog>
     );
 };

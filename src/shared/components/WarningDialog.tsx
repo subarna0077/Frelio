@@ -1,38 +1,37 @@
-import {Dialog, DialogTitle, DialogContent, DialogActions, Button} from '@mui/material'
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material'
 
 import { useWarningDialogStore } from '../hooks/useWarningDialogStore'
 
-interface WarningDialogProps  {
-    onConfirm: ()=> void,
-    onCancel: ()=> void,
-    warningMsg?: string,
+interface WarningDialogProps {
+    handleConfirm: () => void,
+    handleCancel: () => void,
+    title?: string,
+    message?: string,
 }
 
-export const WarningDialog = ({onConfirm, onCancel, warningMsg}: WarningDialogProps) => {
+export const WarningDialog = ({ handleConfirm, handleCancel, message, title }: WarningDialogProps) => {
 
-    const openWarningDialog = useWarningDialogStore(state=> state.openModal)
-    const setOpenWarningDialog = useWarningDialogStore(state=> state.setOpenModal)
+    const setType = useWarningDialogStore(state => state.setType)
 
-    console.log(warningMsg)
 
-  return (
+    return (
 
-    <Dialog open={openWarningDialog} onClose={()=> setOpenWarningDialog(false)}>
-        <DialogTitle>
-            Update status
-        </DialogTitle>
+        <Dialog open onClose={() => setType('none')}>
+            <DialogTitle>
+                {title ? title : 'Update status'}
+            </DialogTitle>
 
-        <DialogContent>
-             You have some unfinished Milestones. Do u want to still proceed with completing project?
-        </DialogContent>
+            <DialogContent>
+                {message}
+            </DialogContent>
 
-        <DialogActions>
-            <Button onClick={onCancel}>Cancel</Button>
-            <Button variant='contained' color='error' onClick={onConfirm}>Confirm</Button>
-        </DialogActions>
+            <DialogActions>
+                <Button onClick={handleCancel}>Cancel</Button>
+                <Button variant='contained' color='error' onClick={handleConfirm}>Confirm</Button>
+            </DialogActions>
 
-    </Dialog>
-    
-  )
+        </Dialog>
+
+    )
 }
 

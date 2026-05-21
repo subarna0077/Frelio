@@ -1,16 +1,15 @@
 import { create } from 'zustand'
 
+type WarningDialogType = 'none' | 'edit' | 'delete';
+
 export type WarningDialogStoreType = {
-    openModal: boolean,
-    setOpenModal: (value: boolean) => void;
+    type: WarningDialogType;
+    setType: (type: WarningDialogType) => void;
 }
 
 export const useWarningDialogStore = create<WarningDialogStoreType>((set) => ({
-    openModal: false,
-    setOpenModal: (value) => {
-        set(() => ({
-            openModal: value
-        }))
-    }
-
+    type: 'none',
+    setType: (type) => set({
+        type
+    })
 }))
