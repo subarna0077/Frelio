@@ -13,6 +13,8 @@ import { useCreateProject } from '../hooks/useCreateProject';
 import { toast } from 'react-hot-toast'
 import { useProjectStore } from '../stores/ProjectStore';
 import { useEditProject } from '../hooks/useEditProject';
+import { WarningDialog } from '../../../shared/components/WarningDialog';
+import { useWarningDialogStore } from '../../../shared/hooks/useWarningDialogStore';
 
 interface AddProjectModalProps {
     initialData?: Project | null,
@@ -21,13 +23,52 @@ interface AddProjectModalProps {
 
 
 export const AddProjectModal = ({ initialData, resetForm }: AddProjectModalProps) => {
-    const { register, control, reset, handleSubmit } = useForm<ProjectDataType>()
+    const { register, control, reset, handleSubmit, setValue } = useForm<ProjectDataType>()
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const { mutate: createProject } = useCreateProject(selectedClient?.id)
     const { mutate: editProject } = useEditProject(initialData?.id);
+    const { data: clients } = useGetClients();
 
     const open = useProjectStore(state => state.openModal)
     const setOpenModal = useProjectStore(state => state.setOpenModal)
+
+    const openWarningDialog = useWarningDialogStore(state => state.openModal)
+    const setOpenWarningDialog = useWarningDialogStore(state => state.setOpenModal)
+
+
+
+    const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+    // check if milestones are completed or not
+
+   
+
+    const handleStatusChange = (e: any, onChange: (...event: any[]) => void) => {
+        const value = e.target.value;
+
+        const unfinishedMilestones = initialData?.milestones?.filter(ml => !ml.is_completed).length;
+
+       
+
+        if (value === 'completed' && unfinishedMilestones) {
+            setPendingStatus(value);
+            setOpenWarningDialog(true);
+
+
+            return;
+        }
+
+        onChange(value);
+    }
+
+    const handleConfirm = () => {
+        setValue('status', pendingStatus ?? '')
+        setPendingStatus(null)
+        setOpenWarningDialog(false);
+    }
+
+    const handleCancel = () => {
+        setOpenWarningDialog(false);
+    }
 
 
     const handleFormClose = () => {
@@ -72,7 +113,18 @@ export const AddProjectModal = ({ initialData, resetForm }: AddProjectModalProps
 
     }, [initialData, reset])
 
-    const { data: clients } = useGetClients();
+    useEffect(() => {
+        if (initialData && clients) {
+            const foundClient = clients.find(c => c.id === initialData.client_id);
+
+            if (foundClient) {
+                setSelectedClient(foundClient)
+            }
+        }
+
+    }, [initialData, clients])
+
+
     return (
         <Dialog open={open} onClose={handleFormClose} maxWidth="sm" fullWidth component="form" onSubmit={handleSubmit(onSubmit)}>
             <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
@@ -83,7 +135,7 @@ export const AddProjectModal = ({ initialData, resetForm }: AddProjectModalProps
             <DialogContent sx={{ pt: 2 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <TextField label="Project name *" fullWidth autoFocus {...register('title')} />
-                    <TextField select label="Client *" fullWidth value={selectedClient?.id ?? ''}>
+                    <TextField select label="Client *" fullWidth value={selectedClient?.id}>
                         {clients?.length === 0
                             ? <MenuItem disabled>No clients available</MenuItem>
                             : clients?.map(c => <MenuItem key={c.id} value={c.id} onClick={() => setSelectedClient(c)}>{c.name}</MenuItem>)
@@ -91,7 +143,11 @@ export const AddProjectModal = ({ initialData, resetForm }: AddProjectModalProps
                     </TextField>
 
                     <Controller name='status' control={control} render={({ field }) => (
-                        <TextField {...field} select label="Status" fullWidth>
+                        <TextField {...field} select label="Status" fullWidth onChange={(e) => {
+                            handleStatusChange(e, field.onChange)
+
+
+                        }}>
                             <MenuItem value="active">Active</MenuItem>
                             <MenuItem value="on-hold">On Hold</MenuItem>
                             <MenuItem value="completed">Completed</MenuItem>
@@ -112,10 +168,12 @@ export const AddProjectModal = ({ initialData, resetForm }: AddProjectModalProps
                     Cancel
                 </Button>
                 <Button variant="contained" type='submit'>
-                    {initialData ? 'Edit project': 'Create project'}
+                    {initialData ? 'Edit project' : 'Create project'}
                     {/* {loading ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : project ? 'Save changes' : 'Create project'} */}
                 </Button>
             </DialogActions>
+
+            {openWarningDialog && <WarningDialog onConfirm={handleConfirm} onCancel={handleCancel} />}
         </Dialog>
     );
 };
