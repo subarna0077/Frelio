@@ -195,7 +195,12 @@ export const Dashboard = () => {
               ) : (
                 <List disablePadding>
                   {activeProjects.map((project, idx) => {
-                    const progress = 0;
+                    if(!project.milestones) {
+                      return;
+                    }
+                    const completedMlCount = project.milestones.filter(ml=> ml.is_completed).length;
+                    const totalMlCount = project.milestones.length;
+                    const progress =(completedMlCount/totalMlCount) * 100;
 
                     return (
                       <React.Fragment key={project.id}>
@@ -226,7 +231,7 @@ export const Dashboard = () => {
                             </Box>
 
                             <Typography variant="caption" color="text.secondary">
-                              {project.clients?.name || 'No client'}
+                              {`${completedMlCount} of ${totalMlCount} milestones completed.`}
                             </Typography>
 
                             <LinearProgress
