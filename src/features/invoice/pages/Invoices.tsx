@@ -62,10 +62,10 @@ export const Invoices = () => {
 
     )
 
-    if (invoices?.length === 0) return
-     <p>
-        No invoices available. Add invoice from project detail page.
-    </p>
+    if (invoices?.length === 0) return (
+        <p>
+            No invoices available. Add invoice from project detail page.
+        </p>)
 
     return (
         <Box sx={{ p: 4 }}>
