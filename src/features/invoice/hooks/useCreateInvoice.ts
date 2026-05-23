@@ -26,7 +26,8 @@ export const useCreateInvoice = (client_id?: string, project_id?: string)=>{
             total,
             invoice_number: invoiceNumber,
             status: 'draft',
-            due_date: data.due_date
+            due_date: data.due_date,
+            public_token: crypto.randomUUID(),
         }).select().single()
 
         if (invoiceError) throw invoiceError;
