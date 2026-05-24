@@ -9,6 +9,7 @@ import { Clients } from '../features/clients/pages/ClientsPage'
 import { Invoices } from '../features/invoice/pages/Invoices'
 import AppLayout from '../shared/components/Layout'
 import { InvoiceDetail } from '../features/invoice/pages/InvoiceDetail'
+import { ClientPortal } from '../shared/pages/ClientPortal'
 export const AppRouter = () => {
 
     return (
@@ -35,7 +36,9 @@ export const AppRouter = () => {
 
             <Route path='/invoices/:id' element={<ProtectedRoute><AppLayout><InvoiceDetail /></AppLayout></ProtectedRoute>}></Route>
 
-           
+            <Route path='/portal/:id' element={<ClientPortal />}></Route>
+
+
         </Routes>
 
     )
