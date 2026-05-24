@@ -17,7 +17,7 @@ import { useEditClient } from '../hooks/useEditClient';
 
 type AddClientModalProps = {
   initialData?: Client | null;
-  resetOnClose: ()=> void;
+  resetOnClose: () => void;
 }
 
 export const AddClientModal = ({ initialData, resetOnClose }: AddClientModalProps) => {
@@ -33,13 +33,13 @@ export const AddClientModal = ({ initialData, resetOnClose }: AddClientModalProp
     resolver: zodResolver(ClientAddSchema),
   })
 
-  const handleFormClose = ()=>{
+  const handleFormClose = () => {
     setOpenModal(false);
-    reset({name: '', address: '', phone: ''})
+    reset({ name: '', address: '', phone: '' , email: ''})
     resetOnClose();
   }
 
- 
+
 
   const onSubmit = (data: ClientFormType) => {
 
@@ -72,18 +72,19 @@ export const AddClientModal = ({ initialData, resetOnClose }: AddClientModalProp
   }
 
   useEffect(() => {
-      reset({
-        name: initialData?.name ?? '',
-        address: initialData?.address ?? '',
-        phone: initialData?.phone ?? ''
-      })
-    
+    reset({
+      name: initialData?.name ?? '',
+      address: initialData?.address ?? '',
+      phone: initialData?.phone ?? '',
+      email: initialData?.email ?? ''
+    })
+
   }, [initialData, reset])
 
   return (
     <Dialog open={open} onClose={handleFormClose} maxWidth="sm" fullWidth component="form" onSubmit={handleSubmit(onSubmit)}>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
-        {initialData ? 'Edit client': 'Create client'}
+        {initialData ? 'Edit client' : 'Create client'}
         <IconButton size="small" onClick={handleFormClose}><CloseRounded fontSize="small" /></IconButton>
       </DialogTitle>
 
@@ -92,6 +93,8 @@ export const AddClientModal = ({ initialData, resetOnClose }: AddClientModalProp
           <TextField label="Name *" {...register('name')} error={!!errors.name} helperText={errors.name?.message} fullWidth autoFocus />
           <TextField label="Phone *" {...register('phone')} error={!!errors.phone} helperText={errors.phone?.message} fullWidth />
           <TextField label="Address *" {...register('address')} error={!!errors.address} helperText={errors.address?.message} fullWidth multiline rows={2} />
+          <TextField label="Email *" {...register('email')} error={!!errors.email} helperText={errors.email?.message} fullWidth multiline rows={2} />
+
         </Box>
       </DialogContent>
 
