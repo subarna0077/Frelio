@@ -20,7 +20,10 @@ export interface Invoice {
     created_at: string,
     clients: Pick<Client, 'name'| 'id' | 'address' > | null,
     total: number,
-    invoice_items: InvoiceItems[]
+    invoice_items: InvoiceItems[],
+    public_token: string,
+    sent_at: string,
+    viewed_at: string
 }
 
 

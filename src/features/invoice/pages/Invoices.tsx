@@ -12,10 +12,11 @@ import {
     MenuItem,
     IconButton,
     Skeleton,
-    Stack
+    Stack,
+    Menu,
 } from '@mui/material'
 
-import PrintIcon from '@mui/icons-material/Print'
+import { Print as PrintIcon, MoreVert } from '@mui/icons-material'
 
 import type { Invoice } from '../types/types'
 import type { InvoiceStatus } from '../types/types'
@@ -23,6 +24,9 @@ import { useListInvoices } from '../hooks/useListInvoices'
 import { useUpdateInvoiceStatus } from '../hooks/useUpdateInvoiceStatus'
 import { toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
+import { useSendInvoice } from '../hooks/useSendInvoice'
+
+import { useState } from 'react'
 
 const invoiceStatuses: InvoiceStatus[] = [
     'draft',
@@ -34,10 +38,37 @@ const invoiceStatuses: InvoiceStatus[] = [
 
 export const Invoices = () => {
 
-    const { data: invoices, isLoading } = useListInvoices()
+    const { data: invoices, isLoading } = useListInvoices();
     const { mutate: updateInv } = useUpdateInvoiceStatus();
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+    const [currentInv, setCurrentInv] = useState<Invoice | null>(null)
 
     const navigate = useNavigate()
+
+    const { mutate: sendInv } = useSendInvoice()
+
+    const handleIconClick = (e: any, invoice: Invoice) => {
+        e.stopPropagation();
+        setAnchorEl(e.currentTarget)
+        setCurrentInv(invoice)
+    }
+
+    const handleMenuClose = () => {
+        setAnchorEl(null)
+        setCurrentInv(null)
+    }
+
+    const handleSendInv = () => {
+        if (!currentInv) return;
+        sendInv(currentInv.id, {
+            onSuccess: () => {
+                toast.success("Invoice sent successfully.")
+            },
+            onError: (error) => {
+                toast.error(error.message)
+            }
+        })
+    }
 
 
 
@@ -50,6 +81,8 @@ export const Invoices = () => {
             }
         })
     }
+
+
 
     if (isLoading) return (
         <Stack direction='column'>
@@ -137,11 +170,35 @@ export const Invoices = () => {
                                         <PrintIcon />
                                     </IconButton>
                                 </TableCell>
+
+                                <TableCell>
+                                    <IconButton onClick={
+                                        (e) => handleIconClick(e, invoice)
+                                    }>
+                                        <MoreVert />
+                                    </IconButton>
+
+
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            <Menu open={Boolean(anchorEl)} anchorEl={anchorEl} onClose={handleMenuClose}>
+                <MenuItem onClick={handleSendInv} disabled={!currentInv}>
+                    {isLoading ? 'Sending Invoice...': 'Send Invoice'}
+                </MenuItem>
+
+                <MenuItem>
+                    Delete Invoice
+                </MenuItem>
+
+
+            </Menu>
+
+
         </Box>
     )
 }
