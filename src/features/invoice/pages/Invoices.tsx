@@ -25,6 +25,7 @@ import { useUpdateInvoiceStatus } from '../hooks/useUpdateInvoiceStatus'
 import { toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import { useSendInvoice } from '../hooks/useSendInvoice'
+import { useDeleteInvoice } from '../hooks/useDeleteInvoice'
 
 import { useState } from 'react'
 
@@ -46,6 +47,7 @@ export const Invoices = () => {
     const navigate = useNavigate()
 
     const { mutate: sendInv } = useSendInvoice()
+    const {mutate: delInv} = useDeleteInvoice()
 
     const handleIconClick = (e: any, invoice: Invoice) => {
         e.stopPropagation();
@@ -63,11 +65,28 @@ export const Invoices = () => {
         sendInv(currentInv.id, {
             onSuccess: () => {
                 toast.success("Invoice sent successfully.")
+                setAnchorEl(null)
+                setCurrentInv(null)
             },
             onError: (error) => {
                 toast.error(error.message)
             }
         })
+    }
+
+    const handleInvDelete = ()=> {
+        if(!currentInv) return;
+        delInv(currentInv.id, {
+            onSuccess: ()=> {
+                toast.success('Invoice deleted successfully.')
+                setAnchorEl(null);
+                setCurrentInv(null);
+            },
+            onError: ()=>{
+                toast.error('Error encountered while deleting')
+            }
+        })
+
     }
 
 
@@ -191,7 +210,7 @@ export const Invoices = () => {
                     {isLoading ? 'Sending Invoice...': 'Send Invoice'}
                 </MenuItem>
 
-                <MenuItem>
+                <MenuItem onClick={handleInvDelete}>
                     Delete Invoice
                 </MenuItem>
 
