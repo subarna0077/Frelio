@@ -21,7 +21,7 @@ import {
 import PaidIcon from "@mui/icons-material/Payment";
 import DownloadIcon from "@mui/icons-material/Download";
 import { generateInvoicePDF } from "../../features/invoice/utils/generateInvoicePDF";
-
+import { useInitiateKhalti } from "../../features/payments/hooks/useInitiateKhalti";
 /* ------------------------------
    CLIENT PORTAL CONTAINER
 --------------------------------*/
@@ -55,9 +55,12 @@ export const ClientPortal = () => {
    PRESENTATIONAL COMPONENT
 --------------------------------*/
 export default function ClientInvoicePortal({ invoice }) {
+    const {mutate:initiateKhalti} = useInitiateKhalti()
+
   if (!invoice) return null;
 
   const {
+    id,
     invoice_number,
     total,
     status,
@@ -168,7 +171,7 @@ export default function ClientInvoicePortal({ invoice }) {
               Download
             </Button>
 
-            <Button variant="contained" startIcon={<PaidIcon />} color="success">
+            <Button variant="contained" startIcon={<PaidIcon />} color="success" onClick={()=> initiateKhalti({amount: total, purchaseOrderId:id, purchaseOrderName: clients.name})}>
               Pay Now
             </Button>
           </Stack>
