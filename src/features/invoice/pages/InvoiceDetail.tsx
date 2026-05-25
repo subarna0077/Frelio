@@ -11,11 +11,13 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Button
 } from '@mui/material'
 
 import { useGetSingleInvoice } from '../hooks/useGetSingleInvoice'
 import type { InvoiceStatus } from '../types/types'
 import { useAuthStore } from '../../auth/stores/authStore'
+import { generateInvoicePDF } from '../utils/generateInvoicePDF'
 
 const getStatusColor = (status: InvoiceStatus) => {
   switch (status) {
@@ -63,6 +65,8 @@ export const InvoiceDetail = () => {
           label={invoice.status}
           color={getStatusColor(invoice.status)}
         />
+
+        <Button onClick={()=> generateInvoicePDF(invoice)}>Download invoice</Button>
       </Stack>
 
       {/* META INFO */}
