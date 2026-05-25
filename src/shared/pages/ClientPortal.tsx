@@ -20,6 +20,7 @@ import {
 
 import PaidIcon from "@mui/icons-material/Payment";
 import DownloadIcon from "@mui/icons-material/Download";
+import { generateInvoicePDF } from "../../features/invoice/utils/generateInvoicePDF";
 
 /* ------------------------------
    CLIENT PORTAL CONTAINER
@@ -163,7 +164,7 @@ export default function ClientInvoicePortal({ invoice }) {
           </Box>
 
           <Stack direction="row" spacing={2}>
-            <Button variant="outlined" startIcon={<DownloadIcon />}>
+            <Button variant="outlined" startIcon={<DownloadIcon />} onClick={()=> generateInvoicePDF(invoice)}>
               Download
             </Button>
 
