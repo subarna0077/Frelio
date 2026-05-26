@@ -3,6 +3,7 @@ import { supabase } from '../../../lib/supabase'
 
 
 interface KhaltiPayload {
+    id: string,
     amount: number,
     purchaseOrderId: string,
     purchaseOrderName: string
@@ -10,10 +11,11 @@ interface KhaltiPayload {
 
 export const useInitiateKhalti = ()=> {
 
-    const initiateKhalti = async ({amount, purchaseOrderId, purchaseOrderName}: KhaltiPayload)=> {
+    const initiateKhalti = async ({id, amount, purchaseOrderId, purchaseOrderName}: KhaltiPayload)=> {
 
         const {data, error} = await supabase.functions.invoke('khalti-initiate', {
             body: {
+                id,
                 amount,
                 purchaseOrderId,
                 purchaseOrderName
