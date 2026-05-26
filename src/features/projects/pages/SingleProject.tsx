@@ -194,6 +194,7 @@ export const SingleProject = () => {
                   <Typography variant="body2" color="text.secondary">No milestones yet</Typography>
                   <Button
                     size="small" startIcon={<AddRounded />} sx={{ mt: 1 }}
+                    onClick={()=> setOpenMilestoneModal(true)}
                   >
                     Add milestone
                   </Button>
