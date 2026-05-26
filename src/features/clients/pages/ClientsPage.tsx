@@ -13,11 +13,16 @@ import { AddClientModal } from '../components/AddClientModal';
 import { useClientStore } from '../stores/ClientStore';
 import { useDeleteClient } from '../hooks/useDeleteClient';
 import { toast } from 'react-hot-toast'
+import { useWarningDialogStore } from '../../../shared/hooks/useWarningDialogStore';
+import { WarningDialog } from '../../../shared/components/WarningDialog';
 
 
 export const Clients = () => {
   const open = useClientStore(state => state.openModal)
   const setOpenModal = useClientStore(state => state.setOpenModal)
+
+  const warningType = useWarningDialogStore(state => state.type)
+  const setWarningType = useWarningDialogStore(state => state.setType)
 
   const { data: clients = [], isLoading } = useGetClients();
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
@@ -32,13 +37,25 @@ export const Clients = () => {
     setOpenModal(true);
   }
 
-  const handleDelete = () => {
+  const handleClose = () => {
+    setOpenMenu(false);
+    setMenuAnchor(null);
+    setSelectedClient(null);
+  }
+
+  const handleDeleteDialog = () => {
+    setWarningType('client-delete')
+    setMenuAnchor(null)
     setOpenMenu(false)
-    // qn to ask ai - should we setMenuAnchor to null here or not since we are setting in when closing menu directly.
+  }
+
+  const onConfirm = () => {
     if (!selectedClient?.id) return;
     deleteClient(selectedClient.id, {
       onSuccess: () => {
-        toast.success('User deleted successfully.')
+        toast.success('Client deleted successfully.')
+        setSelectedClient(null);
+        setWarningType('none')
       },
       onError: (error) => {
         toast.error(error.message)
@@ -46,10 +63,8 @@ export const Clients = () => {
     })
   }
 
-  const handleClose = () => {
-    setOpenMenu(false);
-    setMenuAnchor(null);
-    setSelectedClient(null);
+  const onCancel = () => {
+    setWarningType('none')
   }
 
 
@@ -57,8 +72,8 @@ export const Clients = () => {
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
         <Box>
-          <Typography variant="h5" sx={{fontWeight:700}}>Clients</Typography>
-          <Typography variant="body2" sx={{ color:"text.secondary", mt:0.25}}>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>Clients</Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.25 }}>
             Manage your client relationships
           </Typography>
         </Box>
@@ -95,8 +110,8 @@ export const Clients = () => {
           ) : clients.length === 0 ? (
             <Box sx={{ py: 8, textAlign: 'center' }}>
               <PeopleRounded sx={{ fontSize: 52, color: '#E0E0E0', mb: 1.5 }} />
-              <Typography variant="subtitle1" sx={{ fontWeight:600, color:"text.secondary"}}>No clients yet</Typography>
-              <Typography variant="body2" sx={{ color:"text.secondary", mt:0.5, mb:2}}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, color: "text.secondary" }}>No clients yet</Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5, mb: 2 }}>
                 Add your first client to get started
               </Typography>
               <Button variant="contained" startIcon={<AddRounded />} onClick={() => setOpenModal(true)}>
@@ -124,14 +139,14 @@ export const Clients = () => {
                   >
                     <ListItemAvatar>
                       <Avatar sx={{ bgcolor: 'rgba(29,158,117,0.12)', color: 'primary.main', fontWeight: 700 }}>
-                        {client.name.charAt(0).toUpperCase()}
+                        {client.name?.charAt(0).toUpperCase()}
                       </Avatar>
                     </ListItemAvatar>
                     <ListItemText
                       primary={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="body2" sx={{fontWeight:600}}>{client.name}</Typography>
-                          {client.projects.length > 0 && (
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{client.name}</Typography>
+                          {client.projects?.length > 0 && (
                             <Chip
                               icon={<FolderRounded sx={{ fontSize: '14px !important' }} />}
                               label={`${client.projects.length} projects`}
@@ -169,13 +184,13 @@ export const Clients = () => {
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
         <MenuItem onClick={handleEdit}>Edit</MenuItem>
-        <MenuItem onClick={handleDelete}
+        <MenuItem onClick={handleDeleteDialog}
         >
           Delete
         </MenuItem>
       </Menu>
 
-
+      {warningType === 'client-delete' && <WarningDialog handleCancel={onCancel} handleConfirm={onConfirm} message='Are you sure u want to delete this client? All linked projects related to this client will be deleted too.' title='Delete client' />}
     </Box>
   );
 };

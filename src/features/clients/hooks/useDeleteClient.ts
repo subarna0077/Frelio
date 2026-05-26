@@ -15,6 +15,9 @@ export const useDeleteClient = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ['clients']
+            }),
+            queryClient.invalidateQueries({
+                queryKey: ['projects']
             })
         }
     })
