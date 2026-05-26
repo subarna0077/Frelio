@@ -171,7 +171,7 @@ export default function ClientInvoicePortal({ invoice }) {
               Download
             </Button>
 
-            <Button variant="contained" startIcon={<PaidIcon />} color="success" onClick={()=> initiateKhalti({amount: total, purchaseOrderId:id, purchaseOrderName: clients.name})}>
+            <Button variant="contained" startIcon={<PaidIcon />} color="success" onClick={()=> initiateKhalti({id,amount: total, purchaseOrderId:id, purchaseOrderName: clients.name})}>
               Pay Now
             </Button>
           </Stack>
