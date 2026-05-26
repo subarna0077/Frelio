@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { amount, purchaseOrderId, purchaseOrderName } = await req.json();
+    const {id, amount, purchaseOrderId, purchaseOrderName } = await req.json();
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
         'Authorization': `Key ${khaltiKey}`
       },
       body: JSON.stringify({
-        return_url: `http://localhost:5173/payment-success?orderID=${purchaseOrderId}`,
+        return_url: `http://localhost:5173/portal/${id}/payment-success`,
         amount: amount,
         purchase_order_id: purchaseOrderId,
         purchase_order_name: purchaseOrderName,
