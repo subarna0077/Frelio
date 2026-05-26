@@ -35,7 +35,7 @@ export const AddClientModal = ({ initialData, resetOnClose }: AddClientModalProp
 
   const handleFormClose = () => {
     setOpenModal(false);
-    reset({ name: '', address: '', phone: '' , email: ''})
+    reset({ name: '', address: '', phone: '', email: '' })
     resetOnClose();
   }
 
@@ -50,6 +50,8 @@ export const AddClientModal = ({ initialData, resetOnClose }: AddClientModalProp
       }, {
         onSuccess: () => {
           toast.success('User edited successfully.')
+          handleFormClose();
+
         },
         onError: () => {
           toast.error(
