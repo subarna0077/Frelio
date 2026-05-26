@@ -39,7 +39,7 @@ export const AppRouter = () => {
 
             <Route path='/portal/:id' element={<ClientPortal />}></Route>
 
-            <Route path='/payment-success' element={<PaymentSuccessPortal/>}></Route>
+            <Route path='/portal/:id/payment-success' element={<PaymentSuccessPortal/>}></Route>
 
 
         </Routes>

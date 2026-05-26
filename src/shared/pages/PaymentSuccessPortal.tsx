@@ -1,42 +1,27 @@
-import React, {useEffect} from 'react'
-
-const khaltiLiveSecretKey = import.meta.env.VITE_LIVE_SECRET_KEY
+import { useEffect } from 'react'
+import { useVerifyPayment } from '../../features/payments/hooks/verifyPayment'
 
 
 export const PaymentSuccessPortal = () => {
     const params = new URLSearchParams(window.location.search)
+    console.log(params)
     const pidx = params.get("pidx")
+    const orderId = params.get("purchase_order_id")
 
-    useEffect(()=> {
+    console.log(pidx, orderId);
 
-        const verifyPayment = async ()=> {
-            const res = await fetch(`/epayment/lookup`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Key ${khaltiLiveSecretKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    pidx: pidx
-                })
-            })
 
-            const data = await res.json();
-            console.log(data)
-            return data;
-        }
+    const { mutate: verifyPayment, isPending } = useVerifyPayment()
 
-        verifyPayment()
+    useEffect(() => {
+        if (!pidx || !orderId) return;
+        verifyPayment({pidx, orderId})
+    }, [pidx, orderId, verifyPayment])
+    return (
+        <div>
+            {isPending ? 'Verifying payment...': 'Congratulations your payment is succeeded.'}
 
-        
-
-    }, [])
-  return (
-    <div>
-
-        Congratulations your payment is succeeded.
-      
-    </div>
-  )
+        </div>
+    )
 }
 
