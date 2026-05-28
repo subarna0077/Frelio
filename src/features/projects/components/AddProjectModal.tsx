@@ -45,7 +45,7 @@ export const AddProjectModal = ({ initialData, resetForm }: AddProjectModalProps
 
     }
 
-    const handleStatusChange = (e: React.ChangeEvent<HTMLInputElement>, onChange: (value: string) => void) => {
+    const handleStatusChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, onChange: (value: string) => void) => {
         const value = e.target.value;
         if (value === 'completed') {
             const pendingMlCount = initialData?.milestones?.filter(ml => !ml.is_completed).length;

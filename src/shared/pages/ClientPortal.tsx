@@ -78,7 +78,6 @@ export default function ClientInvoicePortal({ invoice }: {invoice: Invoice}) {
   if (!invoice) return null;
 
   const {
-    id,
     invoice_number,
     total,
     status,
