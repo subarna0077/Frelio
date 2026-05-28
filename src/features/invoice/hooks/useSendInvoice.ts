@@ -4,11 +4,12 @@ import { supabase } from "../../../lib/supabase";
 export const useSendInvoice = () => {
     const qc = useQueryClient();
 
-    const sendInvoice = async (invoiceId: string) => {
+    const sendInvoice = async ({invoice_id ,public_token}: {invoice_id: string, public_token: string}) => {
 
         const { data, error } = await supabase.functions.invoke('send-invoice-email', {
             body: {
-                invoice_id: invoiceId
+                invoice_id: invoice_id,
+                public_token: public_token
             }
         })
         if (error) throw new Error(error.message);

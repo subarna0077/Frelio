@@ -26,7 +26,6 @@ Deno.serve(async (req) => {
       .update({
         status: "sent",
         sent_at: now,
-        public_token: publicToken,
       })
       .eq("id", invoice_id)
       .select("*, clients(*)")
@@ -34,7 +33,7 @@ Deno.serve(async (req) => {
 
     if (updatedError) throw updatedError;
 
-    const portalLink = `http://localhost:5173/portal/${publicToken}`;
+    const portalLink = `${Deno.env.get('FRONTEND_URL')}/portal/${invoice_id}`;
 
     const { error: emailError } = await resend.emails.send({
       from: 'Invoice app <onboarding@resend.dev>',

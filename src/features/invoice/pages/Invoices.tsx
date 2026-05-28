@@ -62,7 +62,7 @@ export const Invoices = () => {
 
     const handleSendInv = () => {
         if (!currentInv) return;
-        sendInv(currentInv.id, {
+        sendInv({invoice_id: currentInv.id, public_token: currentInv.public_token}, {
             onSuccess: () => {
                 toast.success("Invoice sent successfully.")
                 setAnchorEl(null)
