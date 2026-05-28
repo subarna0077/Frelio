@@ -24,17 +24,13 @@ import { generateInvoicePDF } from "../../features/invoice/utils/generateInvoice
 import { useInitiateKhalti } from "../../features/payments/hooks/useInitiateKhalti";
 import type { Invoice } from "../../features/invoice/types/types";
 import type { InvoiceStatus } from "../../features/invoice/types/types";
-import {toast} from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
 /* ------------------------------
    CLIENT PORTAL CONTAINER
 --------------------------------*/
 export const ClientPortal = () => {
   const { id } = useParams<{ id: string }>();
-
-  if(!id) return;
-
-  const { data: invoice, isLoading } = useGetInvoiceByToken(id);
-
+  const { data: invoice, isLoading } = useGetInvoiceByToken(id ?? "");
   if (!id) return <div>Invalid portal link</div>;
 
   if (isLoading) {
@@ -59,23 +55,23 @@ export const ClientPortal = () => {
 /* ------------------------------
    PRESENTATIONAL COMPONENT
 --------------------------------*/
-export default function ClientInvoicePortal({ invoice }: {invoice: Invoice}) {
-    const {mutate:initiateKhalti} = useInitiateKhalti()
+export default function ClientInvoicePortal({ invoice }: { invoice: Invoice }) {
+  const { mutate: initiateKhalti } = useInitiateKhalti()
 
-    const isAlreadyCompleted = invoice.status === 'paid';
+  const isAlreadyCompleted = invoice.status === 'paid';
 
-    const sendPaymentRequest = ()=> {
-      if(isAlreadyCompleted) {
-        toast.success('Payment is already completed.')
-        return;
+  const sendPaymentRequest = () => {
+    if (isAlreadyCompleted) {
+      toast.success('Payment is already completed.')
+      return;
 
-        // THis is working but need to work on this. 
-      }
-      if(!invoice) return;
-      initiateKhalti({id: invoice.id, purchaseOrderId: invoice.id, amount: invoice.total, purchaseOrderName: invoice.invoice_number})
+      // THis is working but need to work on this. 
     }
+    if (!invoice) return;
+    initiateKhalti({ id: invoice.id, purchaseOrderId: invoice.id, amount: invoice.total, purchaseOrderName: invoice.invoice_number })
+  }
 
-    
+
 
   if (!invoice) return null;
 
@@ -109,9 +105,9 @@ export default function ClientInvoicePortal({ invoice }: {invoice: Invoice}) {
     <Box sx={{ p: 3, maxWidth: "1000px", mx: "auto" }}>
       {/* HEADER */}
       <Paper sx={{ p: 3, mb: 3 }} elevation={3}>
-        <Stack direction="row" sx={{justifyContent: 'space-between', alignItems: 'center'}}>
+        <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
           <Box>
-            <Typography variant="h4" sx={{fontWeight:"bold"}}>
+            <Typography variant="h4" sx={{ fontWeight: "bold" }}>
               Invoice #{invoice_number}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -124,12 +120,12 @@ export default function ClientInvoicePortal({ invoice }: {invoice: Invoice}) {
       </Paper>
 
       {/* CLIENT + PROJECT INFO */}
-      <Stack direction={{ xs: "column", md: "row" }} sx={{spacing:2,mb:3}}>
+      <Stack direction={{ xs: "column", md: "row" }} sx={{ spacing: 2, mb: 3 }}>
         <Card sx={{ flex: 1 }}>
           <CardContent>
             <Typography variant="h6">Client</Typography>
             <Divider sx={{ my: 1 }} />
-            <Typography sx={{fontWeight:"bold"}}>{clients?.name}</Typography>
+            <Typography sx={{ fontWeight: "bold" }}>{clients?.name}</Typography>
             <Typography>{clients?.phone}</Typography>
             <Typography>{clients?.address}</Typography>
           </CardContent>
@@ -139,7 +135,7 @@ export default function ClientInvoicePortal({ invoice }: {invoice: Invoice}) {
           <CardContent>
             <Typography variant="h6">Project</Typography>
             <Divider sx={{ my: 1 }} />
-            <Typography sx={{fontWeight:"bold"}}>{projects?.title}</Typography>
+            <Typography sx={{ fontWeight: "bold" }}>{projects?.title}</Typography>
             <Typography>Status: {projects?.status}</Typography>
           </CardContent>
         </Card>
@@ -147,7 +143,7 @@ export default function ClientInvoicePortal({ invoice }: {invoice: Invoice}) {
 
       {/* INVOICE ITEMS */}
       <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6" sx={{mb:2}}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
           Invoice Items
         </Typography>
 
@@ -174,10 +170,10 @@ export default function ClientInvoicePortal({ invoice }: {invoice: Invoice}) {
 
       {/* TOTAL + ACTIONS */}
       <Paper sx={{ p: 3 }}>
-        <Stack direction={{ xs: "column", md: "row" }} sx={{justifyContent:"space-between" ,alignItems:"center"}}>
+        <Stack direction={{ xs: "column", md: "row" }} sx={{ justifyContent: "space-between", alignItems: "center" }}>
           <Box>
             <Typography variant="h6">Total Amount</Typography>
-            <Typography variant="h4" sx={{fontWeight:"bold"}}>
+            <Typography variant="h4" sx={{ fontWeight: "bold" }}>
               Rs. {total}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -186,7 +182,7 @@ export default function ClientInvoicePortal({ invoice }: {invoice: Invoice}) {
           </Box>
 
           <Stack direction="row" spacing={2}>
-            <Button variant="outlined" startIcon={<DownloadIcon />} onClick={()=> generateInvoicePDF(invoice)}>
+            <Button variant="outlined" startIcon={<DownloadIcon />} onClick={() => generateInvoicePDF(invoice)}>
               Download
             </Button>
 
