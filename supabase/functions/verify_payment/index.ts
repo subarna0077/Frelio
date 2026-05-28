@@ -45,9 +45,9 @@ Deno.serve(async (req) => {
             )
         }
 
-        const data = await response.json();
+        const khaltiData = await response.json();
 
-        if (data.status !== "Completed") {
+        if (khaltiData.status !== "Completed") {
             return new Response(JSON.stringify({ message: "Payment Not completed", data }), {
                 status: 400,
                 headers: corsHeaders,
@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
             .from("invoices")
             .update({
                 payment_method: "khalti",
-                payment_reference: data.transaction_id,
+                payment_reference: khaltiData.transaction_id,
                 paid_at: now,
             })
             .eq("id", orderID)
