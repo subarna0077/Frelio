@@ -33,8 +33,8 @@ export interface Invoice {
     notes: string | null;
 
     //joined relations
-    clients: Pick<Client, 'name'| 'id' | 'address' > | null,
-    projects: Pick<Project, 'id' | 'title'> | null,
+    clients: Pick<Client, 'name'| 'id' | 'address' | 'phone' > | null,
+    projects: Pick<Project, 'id' | 'title' | 'status'> | null,
     invoice_items: InvoiceItems[],
 
     //portal

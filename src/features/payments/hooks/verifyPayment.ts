@@ -18,5 +18,8 @@ export const useVerifyPayment = () => {
 
     return useMutation({
         mutationFn: verifyPayment,
+        onSuccess: (data)=> {
+            console.log(data);
+        }
     })
 }

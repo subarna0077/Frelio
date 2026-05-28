@@ -1,31 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from '../_shared/cors.ts'
 
-// http://localhost:5173/payment-success?orderID=7b891905-c7d9-4068-b3d1-7294e9ed99b3&pidx=mBrJM3YzR6XVS8PiHAx2Uc&transaction_id=nt95dmQczBHw3Cjw4NSVeW&tidx=nt95dmQczBHw3Cjw4NSVeW&txnId=nt95dmQczBHw3Cjw4NSVeW&amount=20202&total_amount=20202&mobile=98XXXXX003&status=Completed&purchase_order_id=7b891905-c7d9-4068-b3d1-7294e9ed99b3&purchase_order_name=Subarna+Sapkota
-
-// In success url, we get pidx, status = success
-
-/*
-
-The callback will return the success response
-
-{
-   "pidx": "HT6o6PEZRWFJ5ygavzHWd5",
-   "total_amount": 1000,
-   "status": "Completed",
-   "transaction_id": "GFq9PFS7b2iYvL8Lir9oXe",
-   "fee": 0,
-   "refunded": false
-}
-
-
-
-*/
-
-
-
-
-
 Deno.serve(async (req) => {
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });

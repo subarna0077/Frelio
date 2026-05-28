@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useVerifyPayment } from '../../features/payments/hooks/verifyPayment'
+import {toast} from 'react-hot-toast'
 
 
 export const PaymentSuccessPortal = () => {
@@ -15,7 +16,14 @@ export const PaymentSuccessPortal = () => {
 
     useEffect(() => {
         if (!pidx || !orderId) return;
-        verifyPayment({pidx, orderId})
+        verifyPayment({pidx, orderId}, {
+            onSuccess: ()=> {
+                toast.success("Payment is already verified")
+            },
+            onError: ()=> {
+                
+            }
+        })
     }, [pidx, orderId, verifyPayment])
     return (
         <div>

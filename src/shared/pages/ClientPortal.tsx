@@ -22,6 +22,9 @@ import PaidIcon from "@mui/icons-material/Payment";
 import DownloadIcon from "@mui/icons-material/Download";
 import { generateInvoicePDF } from "../../features/invoice/utils/generateInvoicePDF";
 import { useInitiateKhalti } from "../../features/payments/hooks/useInitiateKhalti";
+import type { Invoice } from "../../features/invoice/types/types";
+import type { InvoiceStatus } from "../../features/invoice/types/types";
+import {toast} from 'react-hot-toast'
 /* ------------------------------
    CLIENT PORTAL CONTAINER
 --------------------------------*/
@@ -54,8 +57,23 @@ export const ClientPortal = () => {
 /* ------------------------------
    PRESENTATIONAL COMPONENT
 --------------------------------*/
-export default function ClientInvoicePortal({ invoice }) {
+export default function ClientInvoicePortal({ invoice }: {invoice: Invoice}) {
     const {mutate:initiateKhalti} = useInitiateKhalti()
+
+    const isAlreadyCompleted = invoice.status === 'paid';
+
+    const sendPaymentRequest = ()=> {
+      if(isAlreadyCompleted) {
+        toast.success('Payment is already completed.')
+        return;
+
+        // THis is working but need to work on this. 
+      }
+      if(!invoice) return;
+      initiateKhalti({id: invoice.id, purchaseOrderId: invoice.id, amount: invoice.total, purchaseOrderName: invoice.invoice_number})
+    }
+
+    
 
   if (!invoice) return null;
 
@@ -71,7 +89,7 @@ export default function ClientInvoicePortal({ invoice }) {
     invoice_items
   } = invoice;
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: InvoiceStatus) => {
     switch (status) {
       case "paid":
         return "success";
@@ -171,7 +189,7 @@ export default function ClientInvoicePortal({ invoice }) {
               Download
             </Button>
 
-            <Button variant="contained" startIcon={<PaidIcon />} color="success" onClick={()=> initiateKhalti({id,amount: total, purchaseOrderId:id, purchaseOrderName: clients.name})}>
+            <Button variant="contained" startIcon={<PaidIcon />} color="success" onClick={sendPaymentRequest}>
               Pay Now
             </Button>
           </Stack>
