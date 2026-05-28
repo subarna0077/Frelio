@@ -63,6 +63,7 @@ Deno.serve(async (req) => {
                 payment_method: "khalti",
                 payment_reference: khaltiData.transaction_id,
                 paid_at: now,
+                status: 'paid',
             })
             .eq("id", orderID)
             .single();
