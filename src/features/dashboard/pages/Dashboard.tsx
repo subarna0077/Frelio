@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Box,
   Card,
@@ -27,6 +27,7 @@ import { useGetProjects } from '../../projects/hooks/useGetProjects';
 import { useGetClients } from '../../clients/hooks/useGetClients';
 import { useListInvoices } from '../../invoice/hooks/useListInvoices';
 import { useAuthStore } from '../../auth/stores/authStore';
+import { RevenueChart } from '../components/RevenueChart';
 
 const statusColor: Record<ProjectStatus, 'success' | 'warning' | 'default'> = {
   active: 'success',
@@ -103,12 +104,82 @@ export const Dashboard = () => {
   const greeting =
     hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
-  const activities = [
-    { text: 'Invoice #INV-003 marked as paid', time: '2h ago', color: '#1D9E75' },
-    { text: 'Milestone "Design handoff" completed', time: '5h ago', color: '#3B82F6' },
-    { text: 'New project "E-commerce site" created', time: '1d ago', color: '#F59E0B' },
-    { text: 'Client "Ram Bahadur" added', time: '2d ago', color: '#8B5CF6' },
-  ];
+
+  // think of it like = every event = text, time, color
+
+  // const activities = [
+  //   { text: 'Invoice #INV-003 marked as paid', time: '2h ago', color: '#1D9E75' },
+  //   { text: 'Milestone "Design handoff" completed', time: '5h ago', color: '#3B82F6' },
+  //   { text: 'New project "E-commerce site" created', time: '1d ago', color: '#F59E0B' },
+  //   { text: 'Client "Ram Bahadur" added', time: '2d ago', color: '#8B5CF6' },
+  // ];
+
+
+  const activities = useMemo(() => {
+    const events: { text: string; time: string; color: string }[] = []
+
+    // invoice events
+    invoices.forEach(inv => {
+      // every invoice was created at some point
+      if (inv.created_at) {
+        events.push({
+          text: `Invoice #${inv.invoice_number} created`,
+          time: inv.created_at,
+          color: '#9CA3AF',
+        })
+      }
+
+      // if it was sent, that's a separate event
+      if (inv.sent_at) {
+        events.push({
+          text: `Invoice #${inv.invoice_number} sent to client`,
+          time: inv.sent_at,
+          color: '#3B82F6',
+        })
+      }
+
+      // if it was paid, that's the most important event
+      if (inv.paid_at) {
+        events.push({
+          text: `Invoice #${inv.invoice_number} marked as paid`,
+          time: inv.paid_at,
+          color: '#1D9E75',
+        })
+      }
+    })
+
+    // project events
+    projects.forEach(proj => {
+      if (proj.created_at) {
+        events.push({
+          text: `Project "${proj.title}" created`,
+          time: proj.created_at,
+          color: '#F59E0B',
+        })
+      }
+
+      // milestones are nested inside each project
+      proj.milestones?.forEach(ml => {
+        if (ml.is_completed && ml.completed_at) {
+          events.push({
+            text: `Milestone "${ml.name}" completed`,
+            time: ml.completed_at,
+            color: '#8B5CF6',
+          })
+        }
+      })
+    })
+
+    console.log(events)
+
+    // sort by most recent first, take latest 5
+    return events
+      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+      .slice(0, 5)
+
+  }, [invoices, projects]) // recalculates only when invoices or projects change
+
+
 
   return (
     <Box>
@@ -161,6 +232,8 @@ export const Dashboard = () => {
         ))}
       </Box>
 
+      <RevenueChart invoices={invoices} />
+
       {/* MAIN CONTENT */}
       <Box
         sx={{
@@ -195,12 +268,13 @@ export const Dashboard = () => {
               ) : (
                 <List disablePadding>
                   {activeProjects.map((project, idx) => {
-                    if(!project.milestones) {
+                    if (!project.milestones) {
                       return;
                     }
-                    const completedMlCount = project.milestones.filter(ml=> ml.is_completed).length;
+                    const completedMlCount = project.milestones.filter(ml => ml.is_completed).length;
                     const totalMlCount = project.milestones.length;
-                    const progress =(completedMlCount/totalMlCount) * 100;
+                    const hasMilestones = totalMlCount > 0;
+                    const progress = hasMilestones ? (completedMlCount / totalMlCount) * 100 : 0;
 
                     return (
                       <React.Fragment key={project.id}>
@@ -231,19 +305,20 @@ export const Dashboard = () => {
                             </Box>
 
                             <Typography variant="caption" color="text.secondary">
-                              {`${completedMlCount} of ${totalMlCount} milestones completed.`}
+                              {hasMilestones ? `${completedMlCount} of ${totalMlCount} milestones completed.` : 'No milestones added yet.'}
                             </Typography>
 
-                            <LinearProgress
-                              variant="determinate"
-                              value={progress}
-                              sx={{
-                                mt: 1,
-                                height: 4,
-                                borderRadius: 2,
-                                bgcolor: '#F0F0F0',
-                              }}
-                            />
+                            {hasMilestones &&
+                              <LinearProgress
+                                variant="determinate"
+                                value={progress}
+                                sx={{
+                                  mt: 1,
+                                  height: 4,
+                                  borderRadius: 2,
+                                  bgcolor: '#F0F0F0',
+                                }}
+                              />}
                           </Box>
                         </ListItem>
 
@@ -267,7 +342,14 @@ export const Dashboard = () => {
                 </Typography>
               </Box>
 
-              <List disablePadding>
+              {activities.length === 0 ? (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <FiberManualRecordRounded sx={{ fontSize: 40, color: '#E0E0E0', mb: 1 }} />
+                <Typography variant="body2" color="text.secondary">
+                  No recent activity yet.
+                </Typography>
+              </Box>
+              ) : <List disablePadding>
                 {activities.map((a, i) => (
                   <React.Fragment key={i}>
                     <ListItem sx={{ px: 2.5, py: 1.5 }}>
@@ -284,13 +366,20 @@ export const Dashboard = () => {
                         />
                       </Avatar>
 
-                      <ListItemText primary={a.text} secondary={a.time} />
+                      <ListItemText primary={a.text} secondary={new Date(a.time).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })} />
                     </ListItem>
 
                     {i < activities.length - 1 && <Divider />}
                   </React.Fragment>
                 ))}
-              </List>
+              </List>}
+
+
             </CardContent>
           </Card>
         </Box>
