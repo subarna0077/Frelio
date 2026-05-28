@@ -31,7 +31,9 @@ import {toast} from 'react-hot-toast'
 export const ClientPortal = () => {
   const { id } = useParams<{ id: string }>();
 
-  const { data: invoice, isLoading } = useGetInvoiceByToken(id || "");
+  if(!id) return;
+
+  const { data: invoice, isLoading } = useGetInvoiceByToken(id);
 
   if (!id) return <div>Invalid portal link</div>;
 
