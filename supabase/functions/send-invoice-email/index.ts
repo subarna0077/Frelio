@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { invoice_id } = await req.json();
+    const { invoice_id, public_token } = await req.json();
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
 
     if (updatedError) throw updatedError;
 
-    const portalLink = `${Deno.env.get('FRONTEND_URL')}/portal/${invoice_id}`;
+    const portalLink = `${Deno.env.get('FRONTEND_URL')}/portal/${public_token}`;
 
     const { error: emailError } = await resend.emails.send({
       from: 'Invoice app <onboarding@resend.dev>',
