@@ -10,7 +10,7 @@ export const useListInvoices = () => {
     const listInvoices = async () => {
 
         const { data, error } = await supabase.from('invoices').
-            select(`*, clients(id, name, address)`).eq('user_id', user?.id);
+            select(`*, clients(id, name, address, email)`).eq('user_id', user?.id);
 
         if (error) throw error;
 

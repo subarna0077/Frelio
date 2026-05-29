@@ -101,6 +101,8 @@ export const Invoices = () => {
         })
     }
 
+    console.log(currentInv)
+
 
 
     if (isLoading) return (

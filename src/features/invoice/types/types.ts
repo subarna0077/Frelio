@@ -33,7 +33,7 @@ export interface Invoice {
     notes: string | null;
 
     //joined relations
-    clients: Pick<Client, 'name'| 'id' | 'address' | 'phone' > | null,
+    clients: Pick<Client, 'name'| 'id' | 'address' | 'phone' | 'email' > | null,
     projects: Pick<Project, 'id' | 'title' | 'status'> | null,
     invoice_items: InvoiceItems[],
 
