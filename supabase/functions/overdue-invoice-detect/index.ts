@@ -8,8 +8,6 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const { invoice_id } = await req.json();
-
         const supabase = createClient(
             Deno.env.get("SUPABASE_URL")!,
             Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -19,87 +17,49 @@ Deno.serve(async (req) => {
 
         const now = new Date().toISOString();
 
-        const { data: invoiceData, error } = await supabase
-            .from("invoices").select()
-            .eq("id", invoice_id).single();
+        const { data: overdueInvoices, error } = await supabase
+            .from("invoices").select("*, clients(*), projects(*)").in("status", ['sent', 'viewed']).lt("due_date", new Date().toISOString());
 
         if (error) throw error; // check error immediately.
 
-        console.log('status', invoiceData.status)
-        console.log('due', invoiceData.due_date)
-        console.log(now)
-        console.log("is overdue", new Date(invoiceData.due_date) < new Date(now))
+        // overdue invoices is a array
+
+        // loop over a array using for of loop
+        // for each of the invoice of array , change the status to overdue and send the mail
 
 
+        for (const invoice of overdueInvoices) {
 
-        if (invoiceData.status === 'paid') {
-            return new Response(
-                JSON.stringify({
-                    message: 'This invoice is already paid.',
-                    invoice: invoiceData
-                }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
+            const portalLink = `https://frelio.vercel.app/portal/${invoice.public_token}`
+            await supabase.from("invoices").update({ status: "overdue" }).eq("id", invoice.id);
 
-        if (invoiceData.status === 'sent' && new Date(invoiceData.due_date) < new Date(now)) {
-
-            const { data: updatedInv, error: updatedErr } = await supabase.from("invoices").update({
-                status: 'overdue'
-            }).eq('id', invoice_id).select('*, clients(*), projects(*)').single();
-
-            if (updatedErr) throw updatedErr;
-
-            const portalLink = `${Deno.env.get("FRONTEND_URL")}/portal/${updatedInv.public_token}`;
-
-            const { error: emailError } = await resend.emails.send({
-                from: 'Invoice app <onboarding@resend.dev>',
-                to: updatedInv.clients.email,
-                subject: `Reminder for payment of invoice #${updatedInv.invoice_number}`,
+            await resend.emails.send({
+                from: 'Frelio <onboarding@resend.dev>',
+                to: invoice.clients.email,
+                subject: `Overdue: Invoice #${invoice.invoice_number}`,
                 html: `
-                <h2> Hi ${updatedInv.clients.name} </h2>
-                <p> The payment of the project ${updatedInv.projects.title} is not completed yet. Kindly complete the payment soon. </p>
-                <p> Please find your invoice below </p>
-                 <a href="${portalLink}" style="
-                    display: inline-block;
-                    padding: 12px 24px;
-                    background: #000;
-                    color: #fff;
-                    border-radius: 6px;
-                    text-decoration: none;
-                    ">
-                    View Invoice
-                </a>
-                `
+        <p>The invoice #${invoice.invoice_number} has not been paid yet. Kindly do the payment by today to avoid fine. </p>
+        <a href="${portalLink}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; text-align: center;">View invoice</a>
+
+        `
+
             })
-
-            if (emailError) throw emailError;
-
-
-            return new Response(
-                JSON.stringify({
-                    message: 'This invoice has crossed its due date.',
-                    invoice: updatedInv
-                }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
         }
 
         return new Response(
-            JSON.stringify({
-                message: `This invoice is within the due date guideline`,
-                invoice: invoiceData
-            }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify({ message: `Processed ${overdueInvoices.length} overdue invoices.` }),
+            { headers: { ...corsHeaders, "Content-Type": 'application/json' } }
         )
 
-        if (error) throw error;
-    } catch (err) {
-        return new Response(
-            JSON.stringify({
-                error: err instanceof Error ? err.message : String(err),
-            }),
-            {
-                status: 500,
-                headers: corsHeaders,
-            }
-        );
     }
+    catch (err) {
+        return new Response(
+            JSON.stringify({ error: err instanceof Error ? err.message : String(err) }),
+            { status: 500, headers: corsHeaders }
+        )
+
+    }
+
+
+
 });
