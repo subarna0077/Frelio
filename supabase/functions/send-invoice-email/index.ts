@@ -1,6 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend";
-import {corsHeaders} from '../_shared/cors.ts'
+import { corsHeaders } from '../_shared/cors.ts'
 
 
 
@@ -16,8 +15,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
-
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"))
 
     const now = new Date().toISOString();
 
@@ -35,27 +32,37 @@ Deno.serve(async (req) => {
 
     const portalLink = `${Deno.env.get('FRONTEND_URL')}/portal/${public_token}`;
 
-    const { error: emailError } = await resend.emails.send({
-      from: 'Invoice app <onboarding@resend.dev>',
-      to: updatedInvoice.clients.email,
-      subject: `Invoice #${updatedInvoice.invoice_number}`,
-      html: `
-      <h2> Hi ${updatedInvoice.clients.name} </h2>
-      <p> Please find your invoice below </p> 
+    const emailRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": Deno.env.get("BREVO_API_KEY")!,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: { name: "Frelio", email: "sumansapkota0099@gmail.com" },
+        to: [{ email: updatedInvoice.clients.email, name: updatedInvoice.clients.name }],
+        subject: `Invoice #${updatedInvoice.invoice_number}`,
+        htmlContent: `
+      <h2>Hi ${updatedInvoice.clients.name}</h2>
+      <p>Please find your invoice below</p>
       <a href="${portalLink}" style="
-          display: inline-block;
-          padding: 12px 24px;
-          background: #000;
-          color: #fff;
-          border-radius: 6px;
-          text-decoration: none;
-        ">
-          View Invoice
-        </a>
-      `
+        display: inline-block;
+        padding: 12px 24px;
+        background: #000;
+        color: #fff;
+        border-radius: 6px;
+        text-decoration: none;
+      ">
+        View Invoice
+      </a>
+    `
+      })
     })
 
-    if(emailError) throw emailError;
+    if (!emailRes.ok) {
+      const emailError = await emailRes.json()
+      throw new Error(JSON.stringify(emailError))
+    }
 
 
     return new Response(
