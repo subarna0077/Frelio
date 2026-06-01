@@ -11,6 +11,7 @@ import AppLayout from '../shared/components/Layout'
 import { InvoiceDetail } from '../features/invoice/pages/InvoiceDetail'
 import { ClientPortal } from '../shared/pages/ClientPortal'
 import { PaymentSuccessPortal } from '../shared/pages/PaymentSuccessPortal'
+import { Settings } from '../features/auth/pages/Settings'
 export const AppRouter = () => {
 
     return (
@@ -40,6 +41,9 @@ export const AppRouter = () => {
             <Route path='/portal/:id' element={<ClientPortal />}></Route>
 
             <Route path='/portal/:id/payment-success' element={<PaymentSuccessPortal/>}></Route>
+
+            <Route path='/settings' element={<ProtectedRoute><AppLayout><Settings/></AppLayout></ProtectedRoute>}></Route>
+
 
 
         </Routes>
