@@ -13,7 +13,12 @@ Deno.serve(async (req) => {
             Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
         );
 
-        const resend = new Resend(Deno.env.get("RESEND_API_KEY"))
+        // here we are using service role key . using service role key provide access
+        // to the whole db. and can read write. It typically disable the rls, that mean
+        // it can update the whole db by itself without requiring the id and stuffs.
+
+        // When creating the rls for invoices we have,
+        //  set the rls to that only logged in user can access their own data. others cant.
 
         const now = new Date().toISOString();
 
@@ -22,26 +27,27 @@ Deno.serve(async (req) => {
 
         if (error) throw error; // check error immediately.
 
-        // overdue invoices is a array
-
-        // loop over a array using for of loop
-        // for each of the invoice of array , change the status to overdue and send the mail
-
-
         for (const invoice of overdueInvoices) {
 
             const portalLink = `https://frelio.vercel.app/portal/${invoice.public_token}`
             await supabase.from("invoices").update({ status: "overdue" }).eq("id", invoice.id);
 
-            await resend.emails.send({
-                from: 'Frelio <onboarding@resend.dev>',
-                to: invoice.clients.email,
-                subject: `Overdue: Invoice #${invoice.invoice_number}`,
-                html: `
-        <p>The invoice #${invoice.invoice_number} has not been paid yet. Kindly do the payment by today to avoid fine. </p>
-        <a href="${portalLink}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; text-align: center;">View invoice</a>
+            await fetch("https://api.brevo.com/v3/smtp/email", {
+                method: 'POST',
+                headers: {
+                    "api-key": Deno.env.get("BREVO_API_KEY")!,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    sender: { name: "Frelio", email: "sumansapkota0099@gmail.com" },
+                    to: [{ email: invoice.clients.email, name: invoice.clients.name }],
+                    subject: `Invoice #${invoice.invoice_number}`,
+                    htmlContent: `
+                        <p> The invoice #${invoice.invoice_number} has not been paid yet.Kindly do the payment by today to avoid fine. </p>
+                        <a href="${portalLink}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; text-align: center;" > View invoice</ a >
 
-        `
+                    `
+                })
 
             })
         }
@@ -59,7 +65,4 @@ Deno.serve(async (req) => {
         )
 
     }
-
-
-
 });
