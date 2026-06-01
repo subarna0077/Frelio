@@ -12,10 +12,10 @@ Deno.serve(async (req) => {
   try {
     const {id, amount, purchaseOrderId, purchaseOrderName } = await req.json();
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    // const supabase = createClient(
+    //   Deno.env.get("SUPABASE_URL")!,
+    //   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    // ); not required as it is not used here.
 
     const khaltiKey = Deno.env.get('KHALTI_SECRET_KEY')
 
