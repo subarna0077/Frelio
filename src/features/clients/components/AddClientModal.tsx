@@ -1,114 +1,168 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Button, Box, IconButton,
+  Button, IconButton, Stepper, Step, StepLabel
 } from '@mui/material';
 import { CloseRounded } from '@mui/icons-material';
-import { useClientStore } from '../stores/ClientStore';
-import { useForm } from 'react-hook-form'
-import type { Client, ClientFormType } from '../types/types';
-import { ClientAddSchema } from '../types/types';
+import { useForm, FormProvider, useFormContext } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useCreateClient } from '../hooks/useCreateClient';
 import { toast } from 'react-hot-toast'
+import { useClientStore } from '../stores/ClientStore';
+import { ClientAddSchema } from '../types/types';
+import type { Client, ClientFormType } from '../types/types';
+import { useCreateClient } from '../hooks/useCreateClient';
 import { useEditClient } from '../hooks/useEditClient';
+import { StepType } from './steps/StepType';
+import { StepDetails } from './steps/StepDetails';
+import { StepAddress } from './steps/StepAddress';
 
+const STEPS = ['Type', 'Details', 'Address']
 
-
-type AddClientModalProps = {
-  initialData?: Client | null;
-  resetOnClose: () => void;
+type Props = {
+  initialData?: Client | null
+  resetOnClose: () => void
 }
 
-export const AddClientModal = ({ initialData, resetOnClose }: AddClientModalProps) => {
+export const AddClientModal = ({ initialData, resetOnClose }: Props) => {
   const open = useClientStore(state => state.openModal)
   const setOpenModal = useClientStore(state => state.setOpenModal)
+  const [step, setStep] = useState(0)
 
   const { mutate: createClient } = useCreateClient()
-  const { mutate: editClient } = useEditClient();
+  const { mutate: editClient } = useEditClient()
 
-  const { register, reset, handleSubmit, formState: {
-    errors
-  } } = useForm<ClientFormType>({
+  const form = useForm<ClientFormType>({
     resolver: zodResolver(ClientAddSchema),
+    defaultValues: {
+      client_type: undefined,
+      name: '',
+      phone: '',
+      email: '',
+      address: '',
+      billing_name: '',
+      pan_number: '',
+      currency: 'NPR',
+      notes: '',
+      billing_is_different: false,
+      office_address: {
+        address_line_1: '',
+        address_line_2: '',
+        city: '',
+        province_id: '',
+        district_id: '',
+      },
+    }
   })
 
   const handleFormClose = () => {
-    setOpenModal(false);
-    reset({ name: '', address: '', phone: '', email: '' })
-    resetOnClose();
+    setOpenModal(false)
+    setStep(0)
+    form.reset()
+    resetOnClose()
   }
 
-
+  // populate form when editing
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        name: initialData.name,
+        phone: initialData.phone,
+        email: initialData.email,
+        address: initialData.address ?? '',
+        client_type: initialData.client_type,
+        billing_name: initialData.billing_name ?? '',
+        pan_number: initialData.pan_number ?? '',
+        currency: initialData.currency,
+        notes: initialData.notes ?? '',
+      })
+    }
+  }, [initialData, form])
 
   const onSubmit = (data: ClientFormType) => {
-
     if (initialData) {
-      editClient({
-        id: initialData.id,
-        formData: data
-      }, {
-        onSuccess: () => {
-          toast.success('User edited successfully.')
-          handleFormClose();
-
-        },
-        onError: () => {
-          toast.error(
-            'Error occured on editing.'
-          )
-        }
+      editClient({ id: initialData.id, formData: data }, {
+        onSuccess: () => { toast.success('Client edited successfully.'); handleFormClose() },
+        onError: () => toast.error('Error occurred on editing.')
       })
-    }
-    else {
+    } else {
       createClient(data, {
-        onSuccess: () => {
-          toast.success('User created successfully.')
-          handleFormClose();
-        },
-        onError: () => {
-          toast.error('Error occured on creating.')
-        }
+        onSuccess: () => { toast.success('Client created successfully.'); handleFormClose() },
+        onError: () => toast.error('Error occurred on creating.')
       })
     }
   }
 
-  useEffect(() => {
-    reset({
-      name: initialData?.name ?? '',
-      address: initialData?.address ?? '',
-      phone: initialData?.phone ?? '',
-      email: initialData?.email ?? ''
-    })
-
-  }, [initialData, reset])
-
   return (
-    <Dialog open={open} onClose={handleFormClose} maxWidth="sm" fullWidth component="form" onSubmit={handleSubmit(onSubmit)}>
+    <Dialog open={open} onClose={handleFormClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
-        {initialData ? 'Edit client' : 'Create client'}
-        <IconButton size="small" onClick={handleFormClose}><CloseRounded fontSize="small" /></IconButton>
+        {initialData ? 'Edit client' : 'Add client'}
+        <IconButton size="small" onClick={handleFormClose}>
+          <CloseRounded fontSize="small" />
+        </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 2 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }} >
-          <TextField label="Name *" {...register('name')} error={!!errors.name} helperText={errors.name?.message} fullWidth autoFocus />
-          <TextField label="Phone *" {...register('phone')} error={!!errors.phone} helperText={errors.phone?.message} fullWidth />
-          <TextField label="Address *" {...register('address')} error={!!errors.address} helperText={errors.address?.message} fullWidth multiline rows={2} />
-          <TextField label="Email *" {...register('email')} error={!!errors.email} helperText={errors.email?.message} fullWidth multiline rows={2} />
+      {/* step indicator */}
+      <Stepper activeStep={step} sx={{ px: 3, pb: 2 }}>
+        {STEPS.map(label => (
+          <Step key={label}>
+            <StepLabel>{label}</StepLabel>
+          </Step>
+        ))}
+      </Stepper>
 
-        </Box>
-      </DialogContent>
+      {/* FormProvider makes form available to all steps */}
+      <FormProvider {...form}>
+        <DialogContent sx={{ pt: 1 }}>
+          {step === 0 && <StepType />}
+          {step === 1 && <StepDetails />}
+          {step === 2 && <StepAddress />}
+        </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 2.5 }}>
-        <Button variant="outlined" color="inherit" sx={{ color: 'text.secondary', borderColor: '#E0E0E0' }} onClick={handleFormClose}>
-          Cancel
-        </Button>
-        <Button variant="contained" disabled={false} type='submit'>
-          Submit
-          {/* {loading ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : client ? 'Save changes' : 'Add client'} */}
-        </Button>
-      </DialogActions>
+        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+          <Button
+            variant="outlined"
+            color="inherit"
+            sx={{ color: 'text.secondary', borderColor: '#E0E0E0' }}
+            onClick={step === 0 ? handleFormClose : () => setStep(s => s - 1)}
+          >
+            {step === 0 ? 'Cancel' : 'Back'}
+          </Button>
+
+          {step < 2
+            ? <NextButton step={step} onNext={() => setStep(s => s + 1)} />
+            : <Button variant="contained" onClick={form.handleSubmit(onSubmit)}>
+                {initialData ? 'Save changes' : 'Submit'}
+              </Button>
+          }
+        </DialogActions>
+      </FormProvider>
     </Dialog>
-  );
-};
+  )
+}
+
+// validates current step fields before advancing
+function NextButton({ step, onNext }: { step: number, onNext: () => void }) {
+  const { trigger, watch } = useFormContext<ClientFormType>()  // add this import
+  const clientType = watch('client_type')
+
+  const handleNext = async () => {
+    let valid = false
+
+    if (step === 0) {
+      valid = await trigger('client_type')
+    }
+    if (step === 1) {
+      const fields: (keyof ClientFormType)[] = ['name', 'email', 'phone']
+      if (clientType === 'business') fields.push('billing_name')
+      valid = await trigger(fields)
+    }
+
+    if (valid) onNext()
+  }
+
+  return (
+    <Button variant="contained" onClick={handleNext}>
+      Next
+    </Button>
+  )
+}

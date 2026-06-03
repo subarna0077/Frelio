@@ -1,22 +1,109 @@
 import {z} from 'zod'
 import type { Project } from '../../projects/types/types'
 
+
+export type currency = 'NPR' | 'USD'
+
+export type ClientType = 'individual' | 'business'
+
+export type ClientStatus = 'active' | 'inactive' | 'prospect' | 'archived'
+
+
+export type Province = {
+  id: string
+  name: string
+}
+
+export type District = {
+  id: string;
+  name: string;
+  province_id: string;
+  province?: Province
+}
+
+export type Address = {
+  id: string
+  address_line_1: string
+  address_line_2: string | null
+  city: string
+  district_id: string
+  country: string
+  created_at: string
+  updated_at: string
+
+  // when u include in relations
+  district?: District
+}
+
+const addressSchema = z.object({
+  address_line_1: z.string().min(1, "Required"),
+  address_line_2: z.string().optional(),
+  city: z.string().min(1, 'Required'),
+  province_id: z.string(), // for filtering districts in UI
+  district_id: z.string(),
+})
+
+
+// keep addressSchema as is — that's correct
+
 export const ClientAddSchema = z.object({
+  client_type: z.enum(['individual', 'business']),
+
+  // old fields — keep same validation
   name: z.string().min(6, 'Enter full client name'),
-  address: z.string().min(6, 'Enter client address'),
-  phone: z.string().min(10, 'Phone number should be atleast 10 number long').max(15, 'Phone number should not be more than 15 characters').regex(/^\d+$/, 'Numbers only'),
-  email: z.string()
+  phone: z.string()
+    .min(10, 'Phone number should be at least 10 digits')
+    .max(15, 'Phone number should not be more than 15 characters')
+    .regex(/^\d+$/, 'Numbers only'),
+  email: z.string().email('Enter a valid email'),
+
+  address: z.string().optional(),
+
+  // new optional fields
+  billing_name: z.string().optional(),
+  pan_number: z.string().optional(),
+  currency: z.enum(['NPR', 'USD']).default('NPR'),
+  notes: z.string().optional(),
+
+  // address — replaces old flat address string
+  office_address: addressSchema,
+  billing_is_different: z.boolean().default(false),
+  billing_address: addressSchema.optional(),
+
+}).refine((data) => {
+  if (data.client_type === 'business' && data.billing_is_different) {
+    return !!data.billing_address
+  }
+  return true
+}, {
+  message: 'Billing address is required',
+  path: ['billing_address'],
 })
 
 export type ClientFormType = z.infer<typeof ClientAddSchema>
 
+
+
 export type Client = {
-  name: string
-  address:string
-  phone:string
   id: string
   user_id: string
+  name: string
+  phone:string
+  address:string | null
   created_at: string
-  projects: Pick<Project, 'id' | 'title' | 'status'| 'created_at'>[]
   email: string
+  billing_name: string | null
+  pan_number: string | null
+  currency: currency
+  status: ClientStatus
+  notes: string | null
+  address_id: string | null
+  billing_address_id: string | null
+  deleted_at: string | null
+  updated_at: string
+  client_type: ClientType
+  projects: Pick<Project, 'id' | 'title' | 'status'| 'created_at'>[]
+
+  office_address?: Address
+  billing_address?: Address
 }
