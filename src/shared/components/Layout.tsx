@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
 import {
   Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText,
-  Typography, Avatar, Divider, IconButton, Tooltip, useMediaQuery, useTheme,
+  Typography, Avatar, IconButton, Tooltip, useMediaQuery, useTheme,
   AppBar, Toolbar,
 } from '@mui/material';
 import {
-  DashboardRounded, PeopleRounded, FolderRounded, ReceiptRounded,
-  SettingsRounded, MenuRounded, CloseRounded, BoltRounded,
+  DashboardOutlined, PersonOutlined, FolderOpenOutlined, ReceiptOutlined,
+  SettingsOutlined, MenuRounded, CloseRounded, BoltRounded,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../features/auth/stores/authStore';
 
-const DRAWER_WIDTH = 240;
-const COLLAPSED_WIDTH = 72;
+const DRAWER_WIDTH = 232;
+const COLLAPSED_WIDTH = 64;
 
 const navItems = [
-  { label: 'Dashboard', icon: <DashboardRounded />, path: '/dashboard' },
-  { label: 'Clients', icon: <PeopleRounded />, path: '/clients' },
-  { label: 'Projects', icon: <FolderRounded />, path: '/projects' },
-  { label: 'Invoices', icon: <ReceiptRounded />, path: '/invoices' },
-  { label: 'Settings', icon: <SettingsRounded />, path: '/settings' },
+  { label: 'Dashboard', icon: <DashboardOutlined />, path: '/dashboard' },
+  { label: 'Clients',   icon: <PersonOutlined />,   path: '/clients' },
+  { label: 'Projects',  icon: <FolderOpenOutlined />, path: '/projects' },
+  { label: 'Invoices',  icon: <ReceiptOutlined />,   path: '/invoices' },
+  { label: 'Settings',  icon: <SettingsOutlined />,  path: '/settings' },
 ];
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
@@ -31,68 +31,107 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
 
   const user = useAuthStore(state => state.user);
-
   const drawerWidth = collapsed && !isMobile ? COLLAPSED_WIDTH : DRAWER_WIDTH;
 
   const drawerContent = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#FFFFFF' }}>
-      {/* Logo */}
-      <Box sx={{ px: collapsed ? 1.5 : 3, py: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <Box sx={{
-          width: 36, height: 36, borderRadius: 2,
-          bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
-        }}>
-          <BoltRounded sx={{ color: '#fff', fontSize: 20 }} />
+    <Box
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: 'background.default',
+      }}
+    >
+      {/* Logo row */}
+      <Box
+        sx={{
+          px: collapsed ? 1.5 : 2.5,
+          py: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          minHeight: 56,
+        }}
+      >
+        <Box
+          sx={{
+            width: 30,
+            height: 30,
+            borderRadius: 1.5,
+            bgcolor: '#0F6E56',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <BoltRounded sx={{ color: '#fff', fontSize: 17 }} />
         </Box>
+
         {!collapsed && (
-          <Typography variant="h6" sx={{ fontWeight: 800, color: 'text.primary', letterSpacing: '-0.5px' }}>
+          <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary', letterSpacing: '-0.3px', flex: 1 }}>
             Frelio
           </Typography>
         )}
+
         {!isMobile && (
           <IconButton
             size="small"
             onClick={() => setCollapsed(!collapsed)}
-            sx={{ ml: 'auto', color: 'text.secondary' }}
+            sx={{ color: 'text.disabled', ml: collapsed ? 'auto' : 0, p: 0.5 }}
           >
-            <MenuRounded fontSize="small" />
+            <MenuRounded sx={{ fontSize: 17 }} />
           </IconButton>
         )}
       </Box>
 
-      <Divider sx={{ mx: 2, borderColor: '#F0F0F0' }} />
+      {/* Divider */}
+      <Box sx={{ mx: 2, borderBottom: '0.5px solid', borderColor: 'divider' }} />
 
-      {/* Nav Items */}
-      <List sx={{ flex: 1, px: 1.5, pt: 1 }}>
+      {/* Nav items */}
+      <List sx={{ flex: 1, px: 1, pt: 1, pb: 1 }}>
         {navItems.map(({ label, icon, path }) => {
           const active = location.pathname === path;
           return (
-            <ListItem key={path} disablePadding sx={{ mb: 0.5 }}>
-              <Tooltip title={collapsed ? label : ''} placement="right">
+            <ListItem key={path} disablePadding sx={{ mb: 0.25 }}>
+              <Tooltip title={collapsed ? label : ''} placement="right" slotProps={{ tooltip: { sx: { fontSize: 12 } } }}>
                 <ListItemButton
-                  onClick={() => { navigate(path); if (isMobile) setMobileOpen(false); }}
+                  onClick={() => {
+                    navigate(path);
+                    if (isMobile) setMobileOpen(false);
+                  }}
                   sx={{
-                    borderRadius: 2,
-                    minHeight: 44,
-                    px: collapsed ? 1.5 : 2,
-                    bgcolor: active ? 'rgba(29,158,117,0.1)' : 'transparent',
-                    color: active ? 'primary.main' : 'text.secondary',
-                    '&:hover': { bgcolor: active ? 'rgba(29,158,117,0.12)' : 'rgba(0,0,0,0.04)' },
-                    transition: 'all 0.15s ease',
+                    borderRadius: 1.5,
+                    minHeight: 38,
+                    px: collapsed ? 1.25 : 1.5,
+                    bgcolor: active ? '#E1F5EE' : 'transparent',
+                    color: active ? '#0F6E56' : 'text.secondary',
+                    '&:hover': {
+                      bgcolor: active ? '#E1F5EE' : 'action.hover',
+                    },
                   }}
                 >
-                  <ListItemIcon sx={{
-                    minWidth: collapsed ? 0 : 36,
-                    color: 'inherit',
-                    mr: collapsed ? 0 : 0.5,
-                    '& svg': { fontSize: 22 },
-                  }}>
+                  <ListItemIcon
+                    sx={{
+                      minWidth: collapsed ? 0 : 32,
+                      color: 'inherit',
+                      '& svg': { fontSize: 18 },
+                    }}
+                  >
                     {icon}
                   </ListItemIcon>
                   {!collapsed && (
                     <ListItemText
                       primary={label}
+                      slotProps={{
+                        primary: {
+                          sx: {
+                            fontSize: 13,
+                            fontWeight: active ? 500 : 400,
+                            color: 'inherit',
+                          },
+                        },
+                      }}
                     />
                   )}
                 </ListItemButton>
@@ -102,26 +141,40 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         })}
       </List>
 
-      <Divider sx={{ mx: 2, borderColor: '#F0F0F0' }} />
+      {/* Divider */}
+      <Box sx={{ mx: 2, borderBottom: '0.5px solid', borderColor: 'divider' }} />
 
-      {/* User Avatar Footer */}
-      <Box sx={{ px: collapsed ? 1.5 : 2.5, py: 2, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <Avatar sx={{ width: 34, height: 34, bgcolor: 'primary.main', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
-          {user?.name.slice(0, 1).toUpperCase()}
+      {/* User footer */}
+      <Box
+        sx={{
+          px: collapsed ? 1.25 : 2,
+          py: 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+        }}
+      >
+        <Avatar
+          sx={{
+            width: 30,
+            height: 30,
+            bgcolor: '#E1F5EE',
+            color: '#0F6E56',
+            fontSize: 12,
+            fontWeight: 500,
+            flexShrink: 0,
+          }}
+        >
+          {user?.name?.charAt(0).toUpperCase()}
         </Avatar>
+
         {!collapsed && (
-          <Box>
-            <Typography sx={{
-              textTransform:
-                'capitalize',
-              fontWeight: 600,
-              lineHeight: 1.2,
-              color: 'text.primary'
-            }}  >
+          <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'text.primary', lineHeight: 1.3 }} noWrap>
               {user?.name}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
-              NPR Account
+            <Typography sx={{ fontSize: 11, color: 'text.disabled' }} noWrap>
+              Frelio account
             </Typography>
           </Box>
         )}
@@ -131,22 +184,45 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+
       {/* Mobile AppBar */}
       {isMobile && (
         <AppBar
           position="fixed"
           elevation={0}
-          sx={{ bgcolor: '#fff', borderBottom: '1px solid #E5E7EB', zIndex: theme.zIndex.drawer + 1 }}
+          sx={{
+            bgcolor: 'background.default',
+            borderBottom: '0.5px solid',
+            borderColor: 'divider',
+            zIndex: theme.zIndex.drawer + 1,
+          }}
         >
-          <Toolbar sx={{ gap: 1 }}>
-            <IconButton edge="start" onClick={() => setMobileOpen(!mobileOpen)} sx={{ color: 'text.primary' }}>
-              {mobileOpen ? <CloseRounded /> : <MenuRounded />}
+          <Toolbar sx={{ gap: 1, minHeight: '52px !important' }}>
+            <IconButton
+              edge="start"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              sx={{ color: 'text.secondary' }}
+            >
+              {mobileOpen
+                ? <CloseRounded sx={{ fontSize: 18 }} />
+                : <MenuRounded sx={{ fontSize: 18 }} />
+              }
             </IconButton>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box sx={{ width: 28, height: 28, borderRadius: 1.5, bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <BoltRounded sx={{ color: '#fff', fontSize: 16 }} />
+              <Box
+                sx={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: 1.5,
+                  bgcolor: '#0F6E56',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <BoltRounded sx={{ color: '#fff', fontSize: 15 }} />
               </Box>
-              <Typography variant="h6" sx={{ fontWeight: 800, color: 'text.primary', fontSize: '1rem' }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>
                 Frelio
               </Typography>
             </Box>
@@ -154,7 +230,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         </AppBar>
       )}
 
-      {/* Sidebar Drawer */}
+      {/* Sidebar */}
       <Drawer
         variant={isMobile ? 'temporary' : 'permanent'}
         open={isMobile ? mobileOpen : true}
@@ -163,30 +239,29 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         sx={{
           width: drawerWidth,
           flexShrink: 0,
-          transition: 'width 0.2s ease',
+          transition: 'width 0.15s ease',
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box',
             border: 'none',
-            borderRight: '1px solid #E5E7EB',
+            borderRight: '0.5px solid',
+            borderColor: 'divider',
             overflowX: 'hidden',
-            transition: 'width 0.2s ease',
+            transition: 'width 0.15s ease',
           },
         }}
       >
         {drawerContent}
       </Drawer>
 
-      {/* Main Content */}
+      {/* Page content */}
       <Box
         component="main"
         sx={{
           flex: 1,
           minWidth: 0,
-          ml: 0,
-          mt: isMobile ? '64px' : 0,
+          mt: isMobile ? '52px' : 0,
           p: { xs: 2, md: 3 },
-          maxWidth: '100%',
         }}
       >
         {children}

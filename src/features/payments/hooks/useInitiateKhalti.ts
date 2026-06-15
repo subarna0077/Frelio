@@ -24,6 +24,7 @@ export const useInitiateKhalti = ()=> {
 
         if(error) throw error;
         console.log(error)
+        console.log(data)
         return data;
     }
 

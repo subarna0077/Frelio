@@ -12,7 +12,7 @@ export const AddProjectSchema = z.object({
 
 export type ProjectDataType = z.infer<typeof AddProjectSchema>
 
-export type ProjectStatus = 'active' | 'completed' | 'on-hold' | 'cancelled';
+export type ProjectStatus = 'active' | 'completed' | 'on_hold' | 'cancelled';
 
 export type Project = {
     id: string
@@ -23,12 +23,9 @@ export type Project = {
     start_date: string | null
     due_date: string | null
     completed_at: string | null
-    status_new: ProjectStatus
+    status: ProjectStatus
     created_at: string
     description: string | null
-
-    // old field — keep until fully removed
-    status?: ProjectStatus
 
     clients: Pick<Client, 'id' | 'name' | 'phone'> | null
     milestones?: Milestone[]

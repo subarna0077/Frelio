@@ -45,7 +45,7 @@ export const AppRouter = () => {
 
             <Route path='/settings' element={<ProtectedRoute><AppLayout><Settings/></AppLayout></ProtectedRoute>}></Route>
 
-            <Route path='/client-detail' element={<ProtectedRoute><AppLayout><ClientDetail/></AppLayout></ProtectedRoute>}></Route>
+            <Route path='/clients/:id' element={<ProtectedRoute><AppLayout><ClientDetail/></AppLayout></ProtectedRoute>}></Route>
 
 
 

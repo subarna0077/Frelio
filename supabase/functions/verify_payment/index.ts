@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
         }
 
         const khaltiData = await response.json();
+        console.log(khaltiData)
 
         if (khaltiData.status !== "Completed") {
             return new Response(JSON.stringify({ message: "Payment Not completed", data }), {

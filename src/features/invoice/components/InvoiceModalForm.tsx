@@ -19,6 +19,7 @@ import type { Project } from '../../projects/types/types';
 import type { Milestone } from '../../milestone/types/types';
 import { toast } from 'react-hot-toast'
 import { useUpdateMilestoneStatus } from '../../milestone/hooks/useUpdateMilestoneStatus';
+import type { Invoice } from '../types/types';
 
 const TAX_RATE = 0.13  // 13% VAT Nepal
 
@@ -43,7 +44,8 @@ export type InvoiceFormType = z.infer<typeof InvoiceSchema>
 interface Props {
   client_id: string
   project_data: Project
-  preSelectedMs: Milestone
+  preSelectedMs: Milestone,
+  onInvoiceSuccess?: (data:Invoice) => void
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
