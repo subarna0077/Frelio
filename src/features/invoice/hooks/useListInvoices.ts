@@ -10,9 +10,11 @@ export const useListInvoices = () => {
     const listInvoices = async () => {
 
         const { data, error } = await supabase.from('invoices').
-            select(`*, clients(id, name, address, email)`).eq('user_id', user?.id);
+            select(`*, clients(id, name, email), milestones(*)`).eq('user_id', user?.id);
             // Since we have rls enabled, the eq part is redundant.
             // Keeping it is not harmful, but it is doing double filtering which is redundant.
+        
+        console.log('Listed invoices data', data)
 
         if (error) throw error;
 

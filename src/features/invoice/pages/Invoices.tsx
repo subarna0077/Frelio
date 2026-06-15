@@ -1,56 +1,43 @@
+import { useState } from 'react'
 import {
-    Box,
-    Typography,
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Select,
-    MenuItem,
-    IconButton,
-    Skeleton,
-    Stack,
-    Menu,
+    Box, Typography, IconButton, Menu, MenuItem, Skeleton, Chip,
 } from '@mui/material'
-
-import { Print as PrintIcon, MoreVert } from '@mui/icons-material'
-
-import type { Invoice } from '../types/types'
-import type { InvoiceStatus } from '../types/types'
+import {
+    ReceiptOutlined,
+    MoreVertRounded,
+    SendOutlined,
+    PersonOutlined,
+    CalendarTodayOutlined,
+} from '@mui/icons-material'
+import type { Invoice, InvoiceStatus } from '../types/types'
 import { useListInvoices } from '../hooks/useListInvoices'
-import { useUpdateInvoiceStatus } from '../hooks/useUpdateInvoiceStatus'
+import { useDeleteInvoice } from '../hooks/useDeleteInvoice'
 import { toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import { useSendInvoice } from '../hooks/useSendInvoice'
-import { useDeleteInvoice } from '../hooks/useDeleteInvoice'
 
-import { useState } from 'react'
+// ── status color map ──────────────────────────────────────────────────────────
 
-const invoiceStatuses: InvoiceStatus[] = [
-    'draft',
-    'sent',
-    'paid',
-    'overdue',
-]
+const statusChip: Record<InvoiceStatus, { bgcolor: string; color: string; label: string }> = {
+    draft:   { bgcolor: '#F1EFE8', color: '#5F5E5A', label: 'Draft' },
+    sent:    { bgcolor: '#E6F1FB', color: '#185FA5', label: 'Sent' },
+    paid:    { bgcolor: '#E1F5EE', color: '#0F6E56', label: 'Paid' },
+    overdue: { bgcolor: '#FCEBEB', color: '#A32D2D', label: 'Overdue' },
+}
 
+// ── page ──────────────────────────────────────────────────────────────────────
 
 export const Invoices = () => {
-
-    const { data: invoices, isLoading } = useListInvoices();
-    const { mutate: updateInv } = useUpdateInvoiceStatus();
-    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-    const [currentInv, setCurrentInv] = useState<Invoice | null>(null)
-
+    const { data: invoices = [], isLoading } = useListInvoices()
+    const { mutate: sendInv } = useSendInvoice()
+    const { mutate: delInv } = useDeleteInvoice()
     const navigate = useNavigate()
 
-    const { mutate: sendInv } = useSendInvoice()
-    const {mutate: delInv} = useDeleteInvoice()
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
+    const [currentInv, setCurrentInv] = useState<Invoice | null>(null)
 
-    const handleIconClick = (e: any, invoice: Invoice) => {
-        e.stopPropagation();
+    const handleMenuOpen = (e: React.MouseEvent<HTMLElement>, invoice: Invoice) => {
+        e.stopPropagation()
         setAnchorEl(e.currentTarget)
         setCurrentInv(invoice)
     }
@@ -61,164 +48,188 @@ export const Invoices = () => {
     }
 
     const handleSendInv = () => {
-        if (!currentInv) return;
-        sendInv({invoice_id: currentInv.id, public_token: currentInv.public_token}, {
-            onSuccess: () => {
-                toast.success("Invoice sent successfully.")
-                setAnchorEl(null)
-                setCurrentInv(null)
-            },
-            onError: (error) => {
-                toast.error(error.message)
-            }
+        if (!currentInv) return
+        sendInv({ invoice_id: currentInv.id, public_token: currentInv.public_token }, {
+            onSuccess: () => { toast.success('Invoice sent.'); handleMenuClose() },
+            onError: (error) => toast.error(error.message),
         })
     }
 
-    const handleInvDelete = ()=> {
-        if(!currentInv) return;
+    const handleInvDelete = () => {
+        if (!currentInv) return
         delInv(currentInv.id, {
-            onSuccess: ()=> {
-                toast.success('Invoice deleted successfully.')
-                setAnchorEl(null);
-                setCurrentInv(null);
-            },
-            onError: ()=>{
-                toast.error('Error encountered while deleting')
-            }
-        })
-
-    }
-
-
-
-    const handleStatusChange = (id: string, status: InvoiceStatus) => {
-        updateInv({
-            id, status
-        }, {
-            onSuccess: (invoice: Invoice) => {
-                toast.success(`Changed the status to ${invoice.status} `)
-            }
+            onSuccess: () => { toast.success('Invoice deleted.'); handleMenuClose() },
+            onError: () => toast.error('Error deleting invoice.'),
         })
     }
-
-    console.log(currentInv)
-
-
-
-    if (isLoading) return (
-        <Stack direction='column'>
-            <Skeleton variant='text' width='full' height='40px'></Skeleton>
-
-            <Skeleton variant='rectangular' width='full' height='100px' sx={{ mb: 2 }}></Skeleton>
-            <Skeleton variant='rectangular' width='full' height='100px'></Skeleton>
-
-        </Stack>
-
-    )
-
-    if (invoices?.length === 0) return (
-        <p>
-            No invoices available. Add invoice from project detail page.
-        </p>)
 
     return (
-        <Box sx={{ p: 4 }}>
-            <Typography variant="h4" sx={{ mb: 3 }}>
-                Invoices
-            </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
 
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Invoice</TableCell>
-                            <TableCell>Client</TableCell>
-                            <TableCell>Date</TableCell>
-                            <TableCell>Due Date</TableCell>
-                            <TableCell>Total</TableCell>
-                            <TableCell>Status</TableCell>
-                            <TableCell>Print</TableCell>
-                        </TableRow>
-                    </TableHead>
+            {/* Page header */}
+            <Box>
+                <Typography sx={{ fontSize: 18, fontWeight: 500 }}>Invoices</Typography>
+                <Typography sx={{ fontSize: 13, color: 'text.secondary', mt: 0.25 }}>
+                    {isLoading ? '—' : `${invoices.length} total invoice${invoices.length !== 1 ? 's' : ''}`}
+                </Typography>
+            </Box>
 
-                    <TableBody>
-                        {invoices?.map((invoice) => (
-                            <TableRow onClick={() => navigate(`/invoices/${invoice.id}`)} key={invoice.id} sx={{
-                                "&:hover": {
-                                    bgcolor: '#f7f5f0',
-                                    cursor: 'pointer'
-                                }
-                            }}>
-                                <TableCell>
-                                    {invoice.invoice_number}
-                                </TableCell>
-
-                                <TableCell>
-                                    {invoice.clients?.name}
-                                </TableCell>
-
-                                <TableCell>
-                                    {new Date(invoice.created_at).toDateString()}
-                                </TableCell>
-
-                                <TableCell>
-                                    {invoice.due_date}
-                                </TableCell>
-
-                                <TableCell>
-                                    {invoice.total}
-                                </TableCell>
-
-                                <TableCell>
-                                    <Select
-                                        size="small"
-                                        value={invoice.status}
-                                        onClick={(e) => e.stopPropagation()}
-                                        onChange={(e) => {
-                                            handleStatusChange(invoice.id, e.target.value as InvoiceStatus)
-
-                                        }}
-                                    >
-                                        {invoiceStatuses.map((status, index) =>
-                                            <MenuItem key={index} value={status}>
-                                                {status}
-                                            </MenuItem>)}
-                                    </Select>
-                                </TableCell>
-
-                                <TableCell>
-                                    <IconButton>
-                                        <PrintIcon />
-                                    </IconButton>
-                                </TableCell>
-
-                                <TableCell>
-                                    <IconButton onClick={
-                                        (e) => handleIconClick(e, invoice)
-                                    }>
-                                        <MoreVert />
-                                    </IconButton>
-
-
-                                </TableCell>
-                            </TableRow>
+            {/* Invoice list */}
+            <Box
+                sx={{
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                }}
+            >
+                {isLoading ? (
+                    <Box sx={{ p: 2.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        {[1, 2, 3, 4].map(i => (
+                            <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                <Skeleton variant="rounded" width={32} height={32} sx={{ borderRadius: 1.5, flexShrink: 0 }} />
+                                <Box sx={{ flex: 1 }}>
+                                    <Skeleton width="30%" height={16} />
+                                    <Skeleton width="50%" height={13} sx={{ mt: 0.5 }} />
+                                </Box>
+                                <Skeleton width={55} height={22} variant="rounded" sx={{ borderRadius: 999 }} />
+                            </Box>
                         ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                    </Box>
+                ) : invoices.length === 0 ? (
+                    <Box sx={{ py: 6, textAlign: 'center', px: 2.5 }}>
+                        <ReceiptOutlined sx={{ fontSize: 36, color: 'text.disabled', mb: 1 }} />
+                        <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'text.primary' }}>
+                            No invoices yet
+                        </Typography>
+                        <Typography sx={{ fontSize: 13, color: 'text.secondary', mt: 0.5 }}>
+                            Create an invoice from a project's detail page.
+                        </Typography>
+                    </Box>
+                ) : (
+                    invoices.map((invoice, idx) => {
+                        const chip = statusChip[invoice.status]
+                        return (
+                            <Box
+                                key={invoice.id}
+                                onClick={() => navigate(`/invoices/${invoice.id}`)}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1.5,
+                                    px: 2.5,
+                                    py: 1.5,
+                                    cursor: 'pointer',
+                                    borderBottom: idx < invoices.length - 1 ? '0.5px solid' : 'none',
+                                    borderColor: 'divider',
+                                    '&:hover': { bgcolor: 'action.hover' },
+                                }}
+                            >
+                                {/* Icon box */}
+                                <Box
+                                    sx={{
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: 1.5,
+                                        bgcolor: chip.bgcolor,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    <ReceiptOutlined sx={{ fontSize: 15, color: chip.color }} />
+                                </Box>
 
-            <Menu open={Boolean(anchorEl)} anchorEl={anchorEl} onClose={handleMenuClose}>
-                <MenuItem onClick={handleSendInv} disabled={!currentInv}>
-                    {isLoading ? 'Sending Invoice...': 'Send Invoice'}
+                                {/* Invoice number + meta */}
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'text.primary' }} noWrap>
+                                        {invoice.invoice_number}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.25 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                            <PersonOutlined sx={{ fontSize: 12, color: 'text.disabled' }} />
+                                            <Typography sx={{ fontSize: 12, color: 'text.secondary' }} noWrap>
+                                                {invoice.clients?.name ?? '—'}
+                                            </Typography>
+                                        </Box>
+                                        <Typography sx={{ fontSize: 12, color: 'text.disabled' }}>·</Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                            <CalendarTodayOutlined sx={{ fontSize: 12, color: 'text.disabled' }} />
+                                            <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
+                                                Due {invoice.due_date}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </Box>
+
+                                {/* Amount */}
+                                <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'text.primary', flexShrink: 0 }}>
+                                    NPR {Number(invoice.total).toLocaleString()}
+                                </Typography>
+
+                                {/* Status chip */}
+                                <Chip
+                                    label={chip.label}
+                                    size="small"
+                                    sx={{
+                                        height: 22,
+                                        fontSize: 11,
+                                        fontWeight: 500,
+                                        bgcolor: chip.bgcolor,
+                                        color: chip.color,
+                                        '& .MuiChip-label': { px: 1.25 },
+                                        flexShrink: 0,
+                                    }}
+                                />
+
+                                {/* Actions */}
+                                <IconButton
+                                    size="small"
+                                    onClick={(e) => handleMenuOpen(e, invoice)}
+                                    sx={{ color: 'text.disabled', flexShrink: 0 }}
+                                >
+                                    <MoreVertRounded sx={{ fontSize: 18 }} />
+                                </IconButton>
+                            </Box>
+                        )
+                    })
+                )}
+            </Box>
+
+            {/* Context menu */}
+            <Menu
+                open={Boolean(anchorEl)}
+                anchorEl={anchorEl}
+                onClose={handleMenuClose}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                slotProps={{
+                    paper: {
+                        sx: {
+                            minWidth: 160,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                        },
+                    },
+                }}
+            >
+                <MenuItem
+                    onClick={handleSendInv}
+                    disabled={!currentInv || currentInv.status === 'paid'}
+                    sx={{ fontSize: 13, gap: 1 }}
+                >
+                    <SendOutlined sx={{ fontSize: 15, color: 'text.disabled' }} />
+                    Send invoice
                 </MenuItem>
-
-                <MenuItem onClick={handleInvDelete}>
-                    Delete Invoice
+                <MenuItem
+                    onClick={handleInvDelete}
+                    sx={{ fontSize: 13, color: 'error.main', gap: 1 }}
+                >
+                    Delete invoice
                 </MenuItem>
-
-
             </Menu>
-
 
         </Box>
     )

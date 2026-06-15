@@ -1,66 +1,74 @@
-import {useMutation, useQueryClient} from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../../lib/supabase'
 import { useAuthStore } from '../../auth/stores/authStore'
-import type{ InvoiceFormType } from '../components/InvoiceModalForm'
+import type { InvoiceFormType } from '../components/InvoiceModalForm'
 
-export const useCreateInvoice = (client_id?: string, project_id?: string)=>{
 
-    const queryClient = useQueryClient()
+type CreateInvoicePayload = InvoiceFormType & {
+  subtotal: number
+  tax: number
+  total: number
+}
 
-    const user = useAuthStore(state=> state.user)
+export const useCreateInvoice = (client_id?: string, project_id?: string) => {
+  const queryClient = useQueryClient()
+  const user = useAuthStore(state => state.user)
 
-    const createInvoice = async(data: InvoiceFormType)=>{
+  const createInvoice = async (data: CreateInvoicePayload) => {
 
-        const total = data.items.reduce((sum, item)=> sum + item.amount, 0)
+    const { count } = await supabase
+      .from('invoices')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user?.id)
 
-        const {count} = await supabase.from('invoices').select('*', {
-            count: 'exact', head: true
-        }).eq('user_id', user?.id)
+    const invoiceNumber = `INV-${String((count ?? 0) + 1).padStart(3, '0')}`
 
-        const invoiceNumber = `INV-${String((count ?? 0) + 1).padStart(3, '0')}`
+  
+    // create invoice
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
+      .insert({
+        user_id: user?.id,
+        client_id,
+        project_id,
+        milestone_id: data.milestone_id,   
+        invoice_number: invoiceNumber,                
+        status: 'draft',               
+        due_date: data.due_date || null,
+        notes: data.notes || null,
+        subtotal: data.subtotal,
+        tax: data.tax,
+        total: data.total,
+        amount_due: data.total,            
+        amount_paid: 0,
+        public_token: crypto.randomUUID(),
+      })
+      .select()
+      .single()
 
-        const {data: invoice, error: invoiceError} = await supabase.from('invoices').insert({
-            user_id: user?.id,  
-            client_id,
-            project_id,
-            total,
-            invoice_number: invoiceNumber,
-            status: 'draft',
-            due_date: data.due_date,
-            public_token: crypto.randomUUID(),
-        }).select().single()
+    if (invoiceError) throw invoiceError
 
-        if (invoiceError) throw invoiceError;
     
+    const items = data.items.map(item => ({
+      invoice_id: invoice.id,
+      description: item.description,
+      amount: item.amount,
+    }))
 
+    const { error: itemsError } = await supabase
+      .from('invoice_items')
+      .insert(items)
 
-        const items = data.items.map(item=> ({
-            invoice_id: invoice.id,
-            description: item.description,
-            amount: item.amount
-        }))
+    if (itemsError) throw itemsError
 
-        const {error} = await supabase.from('invoice_items').insert(items);
+    return invoice
+  }
 
-        if(error) throw error;
-
-        return invoice;
-
+  return useMutation({
+    mutationFn: createInvoice,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['project', project_id] })
     }
-
-
-    return useMutation({
-        mutationFn: createInvoice,
-        onSuccess: ()=> {
-            queryClient.invalidateQueries({
-                queryKey: ['invoices']
-            })
-
-            console.log('Invoice created succesffuly')
-
-        }
-    })
-
-
-
+  })
 }
