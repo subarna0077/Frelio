@@ -17,11 +17,11 @@ export interface MilestoneModalProps {
     projectId?: string
 }
 
-export const MilestoneModalForm = ({projectId}: MilestoneModalProps) => {
+export const MilestoneModalForm = ({ projectId }: MilestoneModalProps) => {
     const setOpenMilestoneModal = useMilestoneStore(state => state.setOpenModal)
     const openMilestoneModal = useMilestoneStore(state => state.openModal)
 
-    const {mutate: createMilestone, isPending: creatingMilestone} = useCreateMilestone(projectId)
+    const { mutate: createMilestone, isPending: creatingMilestone } = useCreateMilestone(projectId)
 
     const { register, reset, handleSubmit, formState: {
         errors
@@ -36,16 +36,16 @@ export const MilestoneModalForm = ({projectId}: MilestoneModalProps) => {
     const onSubmit = (data: MilestoneFormType) => {
         console.log(data);
         createMilestone(data, {
-            onSuccess: ()=>{
+            onSuccess: () => {
                 toast.success('Milestone created successfully.')
                 reset()
                 setOpenMilestoneModal(false)
             },
-            onError: (error)=> {
+            onError: (error) => {
                 toast.error(error.message)
             }
         });
-        
+
 
     }
 
@@ -62,11 +62,20 @@ export const MilestoneModalForm = ({projectId}: MilestoneModalProps) => {
             <DialogContent sx={{ pt: 2 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <TextField
-                        label="Milestone name *"
+                        label="Milestone title *"
                         fullWidth autoFocus
-                        {...register('name')}
-                        error={!!errors.name}
-                        helperText={errors.name?.message}
+                        {...register('title')}
+                        error={!!errors.title}
+                        helperText={errors.title?.message}
+                    />
+
+                    <TextField
+                        label="Enter short description for this milestone"
+                        {...register('description')}
+                        error={!!errors.title}
+                        helperText={errors.title?.message}
+
+
                     />
                     <TextField
                         label="Amount *"
@@ -106,8 +115,8 @@ export const MilestoneModalForm = ({projectId}: MilestoneModalProps) => {
                 <Button variant="contained" type='submit'>
                     {creatingMilestone ? <CircularProgress size={18} sx={{
                         color: '#fff'
-                    }}></CircularProgress>: 'Create milestone'}
-                    
+                    }}></CircularProgress> : 'Create milestone'}
+
                 </Button>
             </DialogActions>
         </Dialog>

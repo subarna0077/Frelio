@@ -9,12 +9,20 @@ export const useCreateMilestone = (project_id: string | undefined)=>{
     const queryClient = useQueryClient()
 
     const createMilestone = async (milestoneData: MilestoneFormType) : Promise<Milestone>=>{
+
+        const {count, error: countErr} = await supabase.from('milestones').select('*', {count: 'exact', head: true}).
+        eq('project_id', project_id);
+ 
+        if(countErr) throw countErr;
+        
         const {data, error} = await 
         supabase.from('milestones').
         insert({
             ...milestoneData,
             user_id: user?.id,
-            project_id
+            project_id,
+            status: 'pending',
+            order_index: (count ?? 0) + 1
 
         }).select().single()
 
@@ -26,7 +34,9 @@ export const useCreateMilestone = (project_id: string | undefined)=>{
     return useMutation<Milestone, Error, MilestoneFormType>({
         mutationFn: createMilestone,
         onSuccess: ()=>{
-            queryClient.invalidateQueries({queryKey:['milestones', project_id]})
+            queryClient.invalidateQueries({queryKey:['milestones', project_id]}),
+            queryClient.invalidateQueries({queryKey: ['project', project_id]})
+
         }
     })
 }
