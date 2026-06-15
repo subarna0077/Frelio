@@ -35,7 +35,7 @@ export const RevenueChart = ({ invoices }: Props) => {
     return months.map(({ label, year, month }) => {
       const total = invoices
         .filter(inv => {
-          if (inv.status !== 'paid' || !inv.paid_at) return false
+          if (inv.milestones?.status !== 'paid' || !inv.paid_at) return false
           const paidDate = new Date(inv.paid_at)
           return paidDate.getMonth() === month && paidDate.getFullYear() === year
         })

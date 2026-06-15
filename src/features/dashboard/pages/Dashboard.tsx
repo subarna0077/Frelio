@@ -1,25 +1,23 @@
 import React, { useMemo } from 'react';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Chip,
   LinearProgress,
   Skeleton,
-  List,
-  ListItem,
-  ListItemText,
   Avatar,
-  Divider,
 } from '@mui/material';
 
 import {
-  FolderRounded,
-  PeopleRounded,
-  PendingActionsRounded,
-  TrendingUpRounded,
-  FiberManualRecordRounded,
+  FolderOpenOutlined,
+  PersonOutlined,
+  ReceiptOutlined,
+  TrendingUpOutlined,
+  TaskAltOutlined,
+  CalendarTodayOutlined,
+  CheckOutlined,
+  AddOutlined,
+  SendOutlined,
 } from '@mui/icons-material';
 
 import type { ProjectStatus } from '../../projects/types/types';
@@ -29,360 +27,339 @@ import { useListInvoices } from '../../invoice/hooks/useListInvoices';
 import { useAuthStore } from '../../auth/stores/authStore';
 import { RevenueChart } from '../components/RevenueChart';
 
-const statusColor: Record<ProjectStatus, 'success' | 'warning' | 'default'> = {
-  active: 'success',
-  completed: 'default',
-  'on-hold': 'warning',
+// ── status color map ──────────────────────────────────────────────────────────
+
+const statusChip: Record<ProjectStatus, { bgcolor: string; color: string; label: string }> = {
+  active: { bgcolor: '#E1F5EE', color: '#0F6E56', label: 'Active' },
+  completed: { bgcolor: '#F1EFE8', color: '#5F5E5A', label: 'Completed' },
+  'on_hold': { bgcolor: '#FAEEDA', color: '#854F0B', label: 'On hold' },
+  'cancelled': { bgcolor: '#f29f9f', color: '#ba0606', label: 'Cancelled' },
+
 };
 
-const StatCard: React.FC<{
+// ── activity dot color map ────────────────────────────────────────────────────
+
+const activityMeta: Record<string, { bgcolor: string; color: string; icon: React.ReactNode }> = {
+  created: { bgcolor: '#F1EFE8', color: '#5F5E5A', icon: <AddOutlined sx={{ fontSize: 13 }} /> },
+  sent: { bgcolor: '#E6F1FB', color: '#185FA5', icon: <SendOutlined sx={{ fontSize: 13 }} /> },
+  paid: { bgcolor: '#E1F5EE', color: '#0F6E56', icon: <CheckOutlined sx={{ fontSize: 13 }} /> },
+  milestone: { bgcolor: '#FAEEDA', color: '#854F0B', icon: <TaskAltOutlined sx={{ fontSize: 13 }} /> },
+  project: { bgcolor: '#E6F1FB', color: '#185FA5', icon: <FolderOpenOutlined sx={{ fontSize: 13 }} /> },
+};
+
+// ── metric card ───────────────────────────────────────────────────────────────
+
+const MetricCard: React.FC<{
   label: string;
   value: string | number;
   icon: React.ReactNode;
+  bgcolor: string;
   color: string;
   loading?: boolean;
-}> = ({ label, value, icon, color, loading }) => (
-  <Card elevation={0} sx={{ flex: 1, minWidth: 220 }}>
-    <CardContent sx={{ p: 2.5 }}>
-      {loading ? (
-        <>
-          <Skeleton width={40} height={40} variant="rounded" sx={{ mb: 1.5 }} />
-          <Skeleton width="60%" height={32} />
-          <Skeleton width="80%" height={20} />
-        </>
-      ) : (
-        <>
-          <Box
-            sx={{
-              width: 44,
-              height: 44,
-              borderRadius: 2,
-              bgcolor: `${color}18`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mb: 1.5,
-              color,
-            }}
-          >
-            {icon}
-          </Box>
-
-          <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
-            {value}
-          </Typography>
-
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-            {label}
-          </Typography>
-        </>
-      )}
-    </CardContent>
-  </Card>
+}> = ({ label, value, icon, bgcolor, color, loading }) => (
+  <Box
+    sx={{
+      flex: 1,
+      minWidth: 180,
+      border: '1px solid',
+      borderColor: 'divider',
+      borderRadius: 2,
+      p: 2.5,
+    }}
+  >
+    {loading ? (
+      <>
+        <Skeleton variant="rounded" width={32} height={32} sx={{ mb: 1.5, borderRadius: 1.5 }} />
+        <Skeleton width="50%" height={22} />
+        <Skeleton width="70%" height={14} sx={{ mt: 0.5 }} />
+      </>
+    ) : (
+      <>
+        <Box
+          sx={{
+            width: 32,
+            height: 32,
+            borderRadius: 1.5,
+            bgcolor,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color,
+            mb: 1.5,
+          }}
+        >
+          {icon}
+        </Box>
+        <Typography sx={{ fontSize: 18, fontWeight: 500, color: 'text.primary', lineHeight: 1.1 }}>
+          {value}
+        </Typography>
+        <Typography sx={{ fontSize: 11, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.04em', mt: 0.5 }}>
+          {label}
+        </Typography>
+      </>
+    )}
+  </Box>
 );
+
+// ── dashboard ─────────────────────────────────────────────────────────────────
 
 export const Dashboard = () => {
   const { data: projects = [], isLoading: projLoading } = useGetProjects();
   const { data: clients = [], isLoading: clientLoading } = useGetClients();
   const { data: invoices = [], isLoading: invLoading } = useListInvoices();
 
-  const user = useAuthStore(state => state.user);
 
+  console.log(projects, clients, invoices)
+
+  const user = useAuthStore(state => state.user);
   const loading = projLoading || clientLoading || invLoading;
 
   const activeProjects = projects.filter(p => p.status === 'active');
-
-  const pendingPayments = invoices.filter(
-    i => i.status === 'draft' || i.status === 'overdue'
-  );
-
+  const pendingPayments = invoices.filter(i => i.milestones?.status === 'invoiced');
   const paidThisMonth = invoices
-    .filter(i => i.status === 'paid')
+    .filter(i => i.milestones?.status === 'paid')
     .reduce((sum, i) => sum + i.total, 0);
 
   const hour = new Date().getHours();
-  const greeting =
-    hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-
-
-  // think of it like = every event = text, time, color
-
-  // const activities = [
-  //   { text: 'Invoice #INV-003 marked as paid', time: '2h ago', color: '#1D9E75' },
-  //   { text: 'Milestone "Design handoff" completed', time: '5h ago', color: '#3B82F6' },
-  //   { text: 'New project "E-commerce site" created', time: '1d ago', color: '#F59E0B' },
-  //   { text: 'Client "Ram Bahadur" added', time: '2d ago', color: '#8B5CF6' },
-  // ];
-
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   const activities = useMemo(() => {
-    const events: { text: string; time: string; color: string }[] = []
+    const events: { text: string; time: string; type: keyof typeof activityMeta }[] = [];
 
-    // invoice events
     invoices.forEach(inv => {
-      // every invoice was created at some point
-      if (inv.created_at) {
-        events.push({
-          text: `Invoice #${inv.invoice_number} created`,
-          time: inv.created_at,
-          color: '#9CA3AF',
-        })
-      }
+      if (inv.created_at)
+        events.push({ text: `Invoice #${inv.invoice_number} created`, time: inv.created_at, type: 'created' });
+      if (inv.sent_at)
+        events.push({ text: `Invoice #${inv.invoice_number} sent to client`, time: inv.sent_at, type: 'sent' });
+      if (inv.paid_at)
+        events.push({ text: `Invoice #${inv.invoice_number} marked as paid`, time: inv.paid_at, type: 'paid' });
+    });
 
-      // if it was sent, that's a separate event
-      if (inv.sent_at) {
-        events.push({
-          text: `Invoice #${inv.invoice_number} sent to client`,
-          time: inv.sent_at,
-          color: '#3B82F6',
-        })
-      }
-
-      // if it was paid, that's the most important event
-      if (inv.paid_at) {
-        events.push({
-          text: `Invoice #${inv.invoice_number} marked as paid`,
-          time: inv.paid_at,
-          color: '#1D9E75',
-        })
-      }
-    })
-
-    // project events
     projects.forEach(proj => {
-      if (proj.created_at) {
-        events.push({
-          text: `Project "${proj.title}" created`,
-          time: proj.created_at,
-          color: '#F59E0B',
-        })
-      }
-
-      // milestones are nested inside each project
+      if (proj.created_at)
+        events.push({ text: `Project "${proj.title}" created`, time: proj.created_at, type: 'project' });
       proj.milestones?.forEach(ml => {
-        if (ml.is_completed && ml.completed_at) {
-          events.push({
-            text: `Milestone "${ml.name}" completed`,
-            time: ml.completed_at,
-            color: '#8B5CF6',
-          })
-        }
-      })
-    })
+        if (ml.status==='completed' && ml.completed_at)
+          events.push({ text: `Milestone "${ml.title}" completed`, time: ml.completed_at, type: 'milestone' });
+      });
+    });
 
-    console.log(events)
-
-    // sort by most recent first, take latest 5
     return events
       .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-      .slice(0, 5)
-
-  }, [invoices, projects]) // recalculates only when invoices or projects change
-
-
+      .slice(0, 5);
+  }, [invoices, projects]);
 
   return (
-    <Box>
-      {/* Header */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>
-          {greeting}, {user?.name?.toUpperCase()} 👋
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+
+      {/* Page header */}
+      <Box>
+        <Typography sx={{ fontSize: 18, fontWeight: 500 }}>
+          {greeting}, {user?.name}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+        <Typography sx={{ fontSize: 13, color: 'text.secondary', mt: 0.25 }}>
           Here's what's happening with your projects today.
         </Typography>
       </Box>
 
-      {/* STAT CARDS (FLEX INSTEAD OF GRID) */}
-      <Box
-        sx={{
-          display: 'flex',
-          gap: 2,
-          flexWrap: 'wrap',
-          mb: 3,
-        }}
-      >
-        {[
-          {
-            label: 'Active Projects',
-            value: loading ? '-' : activeProjects.length,
-            icon: <FolderRounded />,
-            color: '#1D9E75',
-          },
-          {
-            label: 'Total Clients',
-            value: loading ? '-' : clients.length,
-            icon: <PeopleRounded />,
-            color: '#3B82F6',
-          },
-          {
-            label: 'Pending Payments',
-            value: loading ? '-' : pendingPayments.length,
-            icon: <PendingActionsRounded />,
-            color: '#F59E0B',
-          },
-          {
-            label: 'Earned This Month',
-            value: loading ? '-' : `NPR ${paidThisMonth.toLocaleString()}`,
-            icon: <TrendingUpRounded />,
-            color: '#8B5CF6',
-          },
-        ].map(card => (
-          <StatCard key={card.label} {...card} loading={loading} />
-        ))}
+      {/* Metric cards */}
+      <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+        <MetricCard
+          label="Active projects"
+          value={loading ? '—' : activeProjects.length}
+          icon={<FolderOpenOutlined sx={{ fontSize: 15 }} />}
+          bgcolor="#E1F5EE" color="#0F6E56"
+          loading={loading}
+        />
+        <MetricCard
+          label="Total clients"
+          value={loading ? '—' : clients.length}
+          icon={<PersonOutlined sx={{ fontSize: 15 }} />}
+          bgcolor="#E6F1FB" color="#185FA5"
+          loading={loading}
+        />
+        <MetricCard
+          label="Pending payments"
+          value={loading ? '—' : pendingPayments.length}
+          icon={<ReceiptOutlined sx={{ fontSize: 15 }} />}
+          bgcolor="#FAEEDA" color="#854F0B"
+          loading={loading}
+        />
+        <MetricCard
+          label="Earned this month"
+          value={loading ? '—' : `NPR ${paidThisMonth.toLocaleString()}`}
+          icon={<TrendingUpOutlined sx={{ fontSize: 15 }} />}
+          bgcolor="#E1F5EE" color="#0F6E56"
+          loading={loading}
+        />
       </Box>
 
+      {/* Revenue chart */}
       <RevenueChart invoices={invoices} />
 
-      {/* MAIN CONTENT */}
-      <Box
-        sx={{
-          display: 'flex',
-          gap: 2,
-          flexWrap: 'wrap',
-        }}
-      >
-        {/* Active Projects */}
-        <Box sx={{ flex: 2, minWidth: 320 }}>
-          <Card elevation={0}>
-            <CardContent sx={{ p: 0 }}>
-              <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid #F0F0F0' }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  Active Projects
-                </Typography>
-              </Box>
+      {/* Active projects + Activity feed */}
+      <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
-              {loading ? (
-                <Box sx={{ p: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {[1, 2, 3].map(i => (
-                    <Skeleton key={i} height={60} variant="rounded" />
-                  ))}
+        {/* Active projects */}
+        <Box
+          sx={{
+            flex: 2,
+            minWidth: 300,
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 2,
+            overflow: 'hidden',
+          }}
+        >
+          {/* Card header */}
+          <Box sx={{ px: 2.5, py: 1.75, borderBottom: '0.5px solid', borderColor: 'divider' }}>
+            <Typography sx={{ fontSize: 14, fontWeight: 500 }}>Active projects</Typography>
+          </Box>
+
+          {loading ? (
+            <Box sx={{ p: 2.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              {[1, 2, 3].map(i => (
+                <Box key={i}>
+                  <Skeleton width="45%" height={16} />
+                  <Skeleton width="65%" height={13} sx={{ mt: 0.5 }} />
+                  <Skeleton width="100%" height={6} sx={{ mt: 1, borderRadius: 999 }} />
                 </Box>
-              ) : activeProjects.length === 0 ? (
-                <Box sx={{ p: 4, textAlign: 'center' }}>
-                  <FolderRounded sx={{ fontSize: 40, color: '#E0E0E0', mb: 1 }} />
-                  <Typography variant="body2" color="text.secondary">
-                    No active projects
-                  </Typography>
+              ))}
+            </Box>
+          ) : activeProjects.length === 0 ? (
+            <Typography sx={{ fontSize: 13, color: 'text.disabled', textAlign: 'center', py: 3 }}>
+              No active projects yet.
+            </Typography>
+          ) : (
+            activeProjects.map((project, idx) => {
+              const milestones = project.milestones ?? [];
+              const completed = milestones.filter(ml => ml.status==='completed').length;
+              const total = milestones.length;
+              const progress = total > 0 ? (completed / total) * 100 : 0;
+
+              return (
+                <Box
+                  key={project.id}
+                  sx={{
+                    px: 2.5,
+                    py: 1.5,
+                    borderBottom: idx < activeProjects.length - 1 ? '0.5px solid' : 'none',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                    <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'text.primary' }} noWrap>
+                      {project.title}
+                    </Typography>
+                    <Chip
+                      label={statusChip[project.status].label}
+                      size="small"
+                      sx={{
+                        height: 22,
+                        fontSize: 11,
+                        fontWeight: 500,
+                        bgcolor: statusChip[project.status].bgcolor,
+                        color: statusChip[project.status].color,
+                        '& .MuiChip-label': { px: 1.25 },
+                        flexShrink: 0,
+                      }}
+                    />
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: total > 0 ? 1 : 0 }}>
+                    <CalendarTodayOutlined sx={{ fontSize: 12, color: 'text.disabled' }} />
+                    <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
+                      {total > 0
+                        ? `${completed} of ${total} milestones completed`
+                        : 'No milestones added yet'}
+                    </Typography>
+                  </Box>
+
+                  {total > 0 && (
+                    <LinearProgress
+                      variant="determinate"
+                      value={progress}
+                      sx={{
+                        height: 6,
+                        borderRadius: 999,
+                        bgcolor: 'action.hover',
+                        '& .MuiLinearProgress-bar': { borderRadius: 999, bgcolor: '#1D9E75' },
+                      }}
+                    />
+                  )}
                 </Box>
-              ) : (
-                <List disablePadding>
-                  {activeProjects.map((project, idx) => {
-                    if (!project.milestones) {
-                      return;
-                    }
-                    const completedMlCount = project.milestones.filter(ml => ml.is_completed).length;
-                    const totalMlCount = project.milestones.length;
-                    const hasMilestones = totalMlCount > 0;
-                    const progress = hasMilestones ? (completedMlCount / totalMlCount) * 100 : 0;
-
-                    return (
-                      <React.Fragment key={project.id}>
-                        <ListItem sx={{ px: 2.5, py: 1.5 }}>
-                          <Box sx={{ flex: 1 }}>
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1,
-                                mb: 0.5,
-                              }}
-                            >
-                              <Typography
-                                variant="body2"
-                                sx={{ fontWeight: 600 }}
-                                noWrap
-                              >
-                                {project.title}
-                              </Typography>
-
-                              <Chip
-                                label={project.status}
-                                size="small"
-                                color={statusColor[project.status]}
-                                sx={{ height: 20 }}
-                              />
-                            </Box>
-
-                            <Typography variant="caption" color="text.secondary">
-                              {hasMilestones ? `${completedMlCount} of ${totalMlCount} milestones completed.` : 'No milestones added yet.'}
-                            </Typography>
-
-                            {hasMilestones &&
-                              <LinearProgress
-                                variant="determinate"
-                                value={progress}
-                                sx={{
-                                  mt: 1,
-                                  height: 4,
-                                  borderRadius: 2,
-                                  bgcolor: '#F0F0F0',
-                                }}
-                              />}
-                          </Box>
-                        </ListItem>
-
-                        {idx < activeProjects.length - 1 && <Divider />}
-                      </React.Fragment>
-                    );
-                  })}
-                </List>
-              )}
-            </CardContent>
-          </Card>
+              );
+            })
+          )}
         </Box>
 
-        {/* Activity Feed */}
-        <Box sx={{ flex: 1, minWidth: 280 }}>
-          <Card elevation={0}>
-            <CardContent sx={{ p: 0 }}>
-              <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid #F0F0F0' }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  Recent Activity
-                </Typography>
-              </Box>
+        {/* Activity feed */}
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 260,
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 2,
+            overflow: 'hidden',
+          }}
+        >
+          <Box sx={{ px: 2.5, py: 1.75, borderBottom: '0.5px solid', borderColor: 'divider' }}>
+            <Typography sx={{ fontSize: 14, fontWeight: 500 }}>Recent activity</Typography>
+          </Box>
 
-              {activities.length === 0 ? (
-              <Box sx={{ p: 4, textAlign: 'center' }}>
-                <FiberManualRecordRounded sx={{ fontSize: 40, color: '#E0E0E0', mb: 1 }} />
-                <Typography variant="body2" color="text.secondary">
-                  No recent activity yet.
-                </Typography>
-              </Box>
-              ) : <List disablePadding>
-                {activities.map((a, i) => (
-                  <React.Fragment key={i}>
-                    <ListItem sx={{ px: 2.5, py: 1.5 }}>
-                      <Avatar
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          bgcolor: `${a.color}18`,
-                          mr: 1.5,
-                        }}
-                      >
-                        <FiberManualRecordRounded
-                          sx={{ fontSize: 12, color: a.color }}
-                        />
-                      </Avatar>
+          {activities.length === 0 ? (
+            <Typography sx={{ fontSize: 13, color: 'text.disabled', textAlign: 'center', py: 3 }}>
+              No recent activity yet.
+            </Typography>
+          ) : (
+            activities.map((a, i) => {
+              const meta = activityMeta[a.type];
+              return (
+                <Box
+                  key={i}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 1.5,
+                    px: 2.5,
+                    py: 1.5,
+                    borderBottom: i < activities.length - 1 ? '0.5px solid' : 'none',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Avatar
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      bgcolor: meta.bgcolor,
+                      color: meta.color,
+                      flexShrink: 0,
+                      mt: '1px',
+                    }}
+                  >
+                    {meta.icon}
+                  </Avatar>
 
-                      <ListItemText primary={a.text} secondary={new Date(a.time).toLocaleDateString('en-US', {
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography sx={{ fontSize: 13, color: 'text.primary', lineHeight: 1.4 }}>
+                      {a.text}
+                    </Typography>
+                    <Typography sx={{ fontSize: 12, color: 'text.disabled', mt: 0.25 }}>
+                      {new Date(a.time).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         hour: '2-digit',
-                        minute: '2-digit'
-                      })} />
-                    </ListItem>
-
-                    {i < activities.length - 1 && <Divider />}
-                  </React.Fragment>
-                ))}
-              </List>}
-
-
-            </CardContent>
-          </Card>
+                        minute: '2-digit',
+                      })}
+                    </Typography>
+                  </Box>
+                </Box>
+              );
+            })
+          )}
         </Box>
+
       </Box>
     </Box>
   );
