@@ -57,12 +57,12 @@ export const ClientAddSchema = z.object({
   // new optional fields
   billing_name: z.string().optional(),
   pan_number: z.string().optional(),
-  currency: z.enum(['NPR', 'USD']).default('NPR'),
+  currency: z.enum(['NPR', 'USD']),
   notes: z.string().optional(),
 
   // address — replaces old flat address string
   office_address: addressSchema,
-  billing_is_different: z.boolean().default(false),
+  billing_is_different: z.boolean(),
   billing_address: addressSchema.optional(),
 
 }).refine((data) => {

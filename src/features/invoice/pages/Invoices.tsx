@@ -18,11 +18,45 @@ import { useSendInvoice } from '../hooks/useSendInvoice'
 
 // ── status color map ──────────────────────────────────────────────────────────
 
-const statusChip: Record<InvoiceStatus, { bgcolor: string; color: string; label: string }> = {
-    draft:   { bgcolor: '#F1EFE8', color: '#5F5E5A', label: 'Draft' },
-    sent:    { bgcolor: '#E6F1FB', color: '#185FA5', label: 'Sent' },
-    paid:    { bgcolor: '#E1F5EE', color: '#0F6E56', label: 'Paid' },
-    overdue: { bgcolor: '#FCEBEB', color: '#A32D2D', label: 'Overdue' },
+const statusChip: Record<
+  InvoiceStatus,
+  { bgcolor: string; color: string; label: string }
+> = {
+  draft: {
+    bgcolor: '#F1EFE8',
+    color: '#5F5E5A',
+    label: 'Draft',
+  },
+  viewed: {
+    bgcolor: '#E8F0FE',
+    color: '#1A73E8',
+    label: 'Viewed',
+  },
+  sent: {
+    bgcolor: '#E6F1FB',
+    color: '#185FA5',
+    label: 'Sent',
+  },
+  partially_paid: {
+    bgcolor: '#FFF4E5',
+    color: '#B45309',
+    label: 'Partially Paid',
+  },
+  paid: {
+    bgcolor: '#E1F5EE',
+    color: '#0F6E56',
+    label: 'Paid',
+  },
+  overdue: {
+    bgcolor: '#FCEBEB',
+    color: '#A32D2D',
+    label: 'Overdue',
+  },
+  cancelled: {
+    bgcolor: '#FDECEC',
+    color: '#B42318',
+    label: 'Cancelled',
+  },
 }
 
 // ── page ──────────────────────────────────────────────────────────────────────

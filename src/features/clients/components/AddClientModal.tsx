@@ -78,11 +78,30 @@ export const AddClientModal = ({ initialData, resetOnClose }: Props) => {
   const { mutate: editClient } = useEditClient();
   const { data: provinces } = useGetProvince();
   console.log(provinces)
+  console.log(resetOnClose)
 
 
-  const form = useForm<ClientFormType>({
-    resolver: zodResolver(ClientAddSchema),
-  });
+const form = useForm<ClientFormType>({
+  resolver: zodResolver(ClientAddSchema),
+  defaultValues: {
+    client_type: 'individual',
+    currency: 'NPR',
+    billing_is_different: false,
+
+    office_address: {
+      address_line_1: '',
+      address_line_2: '',
+      city: '',
+      province_id: 0,
+      district_id: 0,
+    },
+
+    billing_address: undefined,
+    billing_name: '',
+    pan_number: '',
+    notes: '',
+  },
+})
 
   const selectedType = form.watch('client_type');
   const selectedOfficeProvinceId = form.watch('office_address.province_id');
@@ -341,6 +360,7 @@ export const AddClientModal = ({ initialData, resetOnClose }: Props) => {
                   control={
                     <Checkbox
                       size="small"
+                      checked={billingIsDifferent}
                       {...form.register('billing_is_different')}
                       sx={{ '& .MuiSvgIcon-root': { fontSize: 16 } }}
                     />

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
     Box, Card, CardContent, Typography, TextField,
     Button, Stack, CircularProgress
@@ -6,7 +5,6 @@ import {
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { supabase } from '../../../lib/supabase'
 import { useAuthStore } from '../../auth/stores/authStore'
 import { toast } from 'react-hot-toast'
 import { useUpdateProfile } from '../../profiles/hooks/useUpdateProfile'
@@ -34,10 +32,8 @@ export type PasswordForm = z.infer<typeof PasswordSchema>
 
 export const Settings = () => {
     const user = useAuthStore(state => state.user)
-    const setUser = useAuthStore(state => state.setUser)
     const logout = useAuthStore(state => state.logout)
 
-    const [passwordLoading, setPasswordLoading] = useState(false)
 
     const { mutate: updateProfile, isPending: profileLoading } = useUpdateProfile();
 
@@ -214,13 +210,10 @@ export const Settings = () => {
                             <Button
                                 type="submit"
                                 variant="contained"
-                                disabled={passwordLoading}
+                                
                                 sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
                             >
-                                {passwordLoading
-                                    ? <CircularProgress size={18} sx={{ color: '#fff' }} />
-                                    : 'Change Password'
-                                }
+                               Change password
                             </Button>
                         </Stack>
                     </Box>
@@ -237,7 +230,7 @@ export const Settings = () => {
                     </Box>
 
                     <Box sx={{ p: 3 }}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Stack direction="row" sx={{justifyContent:"space-between", alignItems:"center"}}>
                             <Box>
                                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
                                     Sign out

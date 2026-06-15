@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ProfileForm } from "../../auth/pages/Settings";
 import { useAuthStore } from "../../auth/stores/authStore";
 import type { Profile } from "../types/types";
-import type { User } from "../../auth/types/auth";
 
 
 export const useUpdateProfile = () => {
@@ -16,7 +15,7 @@ export const useUpdateProfile = () => {
         // console.log(user)
         //console.log("user at call time", currentUser?.id)
 
-        const { data: { session } } = await supabase.auth.getSession()
+        // const { data: { session } } = await supabase.auth.getSession()
     
         // Why the session is null?
         //When user logs in with the supabase.auth.signInWithPassword({email, password})

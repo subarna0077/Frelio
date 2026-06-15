@@ -49,7 +49,7 @@ const progressBarColor: Record<ProjectStatus, string> = {
 }
 
 export const editContactSchema = z.object({
-  email: z.email(),
+  email: z.string().email(),
   phone: z.string()
     .min(10, 'Phone number should be at least 10 digits')
     .max(15, 'Phone number should not be more than 15 characters')

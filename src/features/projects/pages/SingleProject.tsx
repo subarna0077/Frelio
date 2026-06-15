@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Box, Typography, Button, Chip, LinearProgress,
   List, ListItem, Tooltip

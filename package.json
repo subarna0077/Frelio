@@ -15,7 +15,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@faker-js/faker": "^10.4.0",
-    "@hookform/resolvers": "^5.2.2",
+    "@hookform/resolvers": "^5.4.0",
     "@mui/icons-material": "^9.0.0",
     "@mui/material": "^9.0.0",
     "@supabase/supabase-js": "^2.105.3",
@@ -29,11 +29,11 @@
     "react": "^19.2.5",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.2.5",
-    "react-hook-form": "^7.75.0",
+    "react-hook-form": "^7.79.0",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.15.0",
     "uuid": "^14.0.0",
-    "zod": "^4.4.3",
+    "zod": "^3.25.76",
     "zustand": "^5.0.13"
   },
   "devDependencies": {
