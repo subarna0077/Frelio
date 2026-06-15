@@ -6,7 +6,30 @@ export const useGetSingleClient = (clientId: string) => {
     const getClient = async (): Promise<Client> => {
         const { data, error } = await supabase
             .from('clients')
-            .select('*')
+            .select(`
+                *,
+                projects (
+                    id,
+                    title,
+                    status,
+                    start_date,
+                    milestones (
+                        id,
+                        amount,
+                        status
+                    )
+                ),
+                invoices (
+                    id,
+                    invoice_number,
+                    total,
+                    status,
+                    created_at,
+                    due_date,
+                    sent_at,
+                    paid_at
+                )
+            `)
             .eq('id', clientId)
             .single()
 
@@ -17,6 +40,6 @@ export const useGetSingleClient = (clientId: string) => {
     return useQuery<Client>({
         queryKey: ['client', clientId],
         queryFn: getClient,
-        enabled: !!clientId
+        enabled: !!clientId,
     })
 }

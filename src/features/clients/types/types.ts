@@ -1,5 +1,6 @@
 import {z} from 'zod'
 import type { Project } from '../../projects/types/types'
+import type { Invoice } from '../../invoice/types/types'
 
 
 export type currency = 'NPR' | 'USD'
@@ -28,8 +29,6 @@ export type Address = {
   city: string
   district_id: string
   country: string
-  created_at: string
-  updated_at: string
 
   // when u include in relations
   district?: District
@@ -39,8 +38,8 @@ const addressSchema = z.object({
   address_line_1: z.string().min(1, "Required"),
   address_line_2: z.string().optional(),
   city: z.string().min(1, 'Required'),
-  province_id: z.string(), // for filtering districts in UI
-  district_id: z.string(),
+  province_id: z.number().min(1, "Province required"), // for filtering districts in UI
+  district_id: z.number().min(1, "District required"),
 })
 
 
@@ -48,16 +47,12 @@ const addressSchema = z.object({
 
 export const ClientAddSchema = z.object({
   client_type: z.enum(['individual', 'business']),
-
-  // old fields — keep same validation
   name: z.string().min(6, 'Enter full client name'),
   phone: z.string()
     .min(10, 'Phone number should be at least 10 digits')
     .max(15, 'Phone number should not be more than 15 characters')
     .regex(/^\d+$/, 'Numbers only'),
   email: z.string().email('Enter a valid email'),
-
-  address: z.string().optional(),
 
   // new optional fields
   billing_name: z.string().optional(),
@@ -102,8 +97,9 @@ export type Client = {
   deleted_at: string | null
   updated_at: string
   client_type: ClientType
-  projects: Pick<Project, 'id' | 'title' | 'status'| 'created_at'>[]
+  projects: Pick<Project, 'id' | 'title' | 'status'| 'created_at' | 'start_date' | 'milestones'>[]
 
   office_address?: Address
   billing_address?: Address
+  invoices?: Invoice[]
 }
