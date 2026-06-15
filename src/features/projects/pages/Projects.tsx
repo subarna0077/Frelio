@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
-  Box, Button, Typography, Card, CardContent, List, ListItem,
-  ListItemText, IconButton, Menu, MenuItem, Skeleton, Divider,
-  Chip, Avatar, ListItemAvatar,
+  Box, Button, Typography, IconButton, Menu, MenuItem,
+  Skeleton, Chip,
 } from '@mui/material';
-import { AddRounded, MoreVertRounded, FolderRounded } from '@mui/icons-material';
+import {
+  AddOutlined,
+  MoreVertRounded,
+  FolderOpenOutlined,
+  PersonOutlined,
+} from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useGetProjects } from '../hooks/useGetProjects';
-import type { Project } from '../types/types';
+import type { Project, ProjectStatus } from '../types/types';
 import toast from 'react-hot-toast';
 import { AddProjectModal } from '../components/AddProjectModal';
 import { useProjectStore } from '../stores/ProjectStore';
@@ -16,164 +20,204 @@ import { useWarningDialogStore } from '../../../shared/hooks/useWarningDialogSto
 import { WarningDialog } from '../../../shared/components/WarningDialog';
 
 
+const statusChip: Record<ProjectStatus, { bgcolor: string; color: string; label: string }> = {
+  active:    { bgcolor: '#E1F5EE', color: '#0F6E56', label: 'Active' },
+  completed: { bgcolor: '#F1EFE8', color: '#5F5E5A', label: 'Completed' },
+  'on_hold': { bgcolor: '#FAEEDA', color: '#854F0B', label: 'On hold' },
+  'cancelled': {bgcolor: '#f8bcbc', color: '#85110b', label: 'Cancelled'},
+};
+
+// ── page ──────────────────────────────────────────────────────────────────────
+
 export const ProjectsPage = () => {
+  const openProjectModal = useProjectStore(state => state.openModal);
+  const setOpenProjectModal = useProjectStore(state => state.setOpenModal);
 
-  const openProjectModal = useProjectStore(state => state.openModal)
-  const setOpenProjectModal = useProjectStore(state => state.setOpenModal)
-
-  const warningType = useWarningDialogStore(state=> state.type);
+  const warningType = useWarningDialogStore(state => state.type);
   const setWarningType = useWarningDialogStore(state => state.setType);
 
-
   const navigate = useNavigate();
-  const { data: projects = [], isLoading: projLoading } = useGetProjects();
-  const { mutate: deleteProject } = useDeleteProject()
+  const { data: projects = [], isLoading: loading } = useGetProjects();
+  const { mutate: deleteProject } = useDeleteProject();
+
+  console.log(projects)
+
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const loading = projLoading;
 
   const handleMenuClose = () => {
     setMenuAnchor(null);
     setSelectedProject(null);
-  }
+  };
 
   const handleEdit = () => {
     setMenuAnchor(null);
     setOpenProjectModal(true);
-  }
+  };
 
   const handleDelete = () => {
-    setWarningType('delete')
+    setWarningType('delete');
     setMenuAnchor(null);
-  }
+  };
 
-  const handleConfirm = ()=> {
-    if(!selectedProject?.id) return;
-    
+  const handleConfirm = () => {
+    if (!selectedProject?.id) return;
     deleteProject(selectedProject.id, {
-      onSuccess: ()=> {
-        toast.success('Project deleted successfully.')
-        setSelectedProject(null)
-        setWarningType('none')
+      onSuccess: () => {
+        toast.success('Project deleted.');
+        setSelectedProject(null);
+        setWarningType('none');
       },
-      onError: ()=> {
-        toast.error('Error deleting project.')
-      }
-    })
+      onError: () => {
+        toast.error('Error deleting project.');
+      },
+    });
+  };
 
-
-  }
-
-  const handleCancel = () => {
-    setWarningType('none')
-  
-  }
-
-  const resetForm = () => {
-    setSelectedProject(null)
-  }
-
+  const handleCancel = () => setWarningType('none');
+  const resetForm = () => setSelectedProject(null);
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+
+      {/* Page header */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>Projects</Typography>
-          <Typography variant="body2" sx={{
-            color: "text.secondary",
-            mt: 0.25
-          }}>
+          <Typography sx={{ fontSize: 18, fontWeight: 500 }}>Projects</Typography>
+          <Typography sx={{ fontSize: 13, color: 'text.secondary', mt: 0.25 }}>
             {projects.length} total project{projects.length !== 1 ? 's' : ''}
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddRounded />} onClick={() => setOpenProjectModal(true)}>
+        <Button
+          variant="contained"
+          startIcon={<AddOutlined sx={{ fontSize: 15 }} />}
+          onClick={() => setOpenProjectModal(true)}
+          sx={{ fontSize: 13 }}
+        >
           New project
         </Button>
       </Box>
 
-      <Card elevation={0}>
-        <CardContent sx={{ p: 0 }}>
-          {loading ? (
-            <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {[1, 2, 3].map(i => (
-                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 1 }}>
-                  <Skeleton variant="circular" width={44} height={44} />
-                  <Box sx={{ flex: 1 }}>
-                    <Skeleton width="45%" height={20} />
-                    <Skeleton width="30%" height={16} />
-                  </Box>
-                  <Skeleton width={70} height={24} variant="rounded" />
+      {/* Project list */}
+      <Box
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2,
+          overflow: 'hidden',
+        }}
+      >
+        {loading ? (
+          <Box sx={{ p: 2.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {[1, 2, 3].map(i => (
+              <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Skeleton variant="rounded" width={32} height={32} sx={{ borderRadius: 1.5, flexShrink: 0 }} />
+                <Box sx={{ flex: 1 }}>
+                  <Skeleton width="40%" height={16} />
+                  <Skeleton width="25%" height={13} sx={{ mt: 0.5 }} />
                 </Box>
-              ))}
-            </Box>
-          ) : projects.length === 0 ? (
-            <Box sx={{ py: 8, textAlign: 'center' }}>
-              <FolderRounded sx={{ fontSize: 52, color: '#E0E0E0', mb: 1.5 }} />
-              <Typography variant="subtitle1" color="text.secondary" sx={{fontWeight: 600}} >No projects yet</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{mt:0.5, mb:2}}>
-                Create your first project to start tracking work
-              </Typography>
-              <Button variant="contained" startIcon={<AddRounded />} onClick={()=>setOpenProjectModal(true)}>
-                New project
-              </Button>
-            </Box>
-          ) : (
-            <List disablePadding>
-              {projects.map((project, idx) => {
-                // const { bg, color, label } = statusInfo(project.status);
-                return (
-                  <React.Fragment key={project.id}>
-                    <ListItem
-                      sx={{
-                        px: 2.5, py: 1.5, cursor: 'pointer',
-                        '&:hover': { bgcolor: 'rgba(0,0,0,0.02)' },
-                      }}
-                      onClick={() => navigate(`/projects/${project.id}`)}
-                      secondaryAction={
-                        <IconButton
-                          size="small"
-                          onClick={e => {
-                            e.stopPropagation();
-                            setMenuAnchor(e.currentTarget);
-                            setSelectedProject(project);
-                          }}
-                        >
-                          <MoreVertRounded fontSize="small" />
-                        </IconButton>
-                      }
-                    >
-                      <ListItemAvatar>
-                        <Avatar>
-                          <FolderRounded fontSize="small" />
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="body2" sx={{fontWeight:600}}>{project.title}</Typography>
-                            <Chip
-                              label={project.status}
-                              size="small"
-                              sx={{ height: 20, fontSize: '0.7rem' }}
-                            />
-                          </Box>
-                        }
-                        secondary={project.client_id || 'No client'}
-                        slotProps={{
-                          secondary: {
-                            variant: 'caption'
-                          }
-                        }}   
-                      />
-                    </ListItem>
-                    {idx < projects.length - 1 && <Divider variant="inset" component="li" />}
-                  </React.Fragment>
-                );
-              })}
-            </List>
-          )}
-        </CardContent>
-      </Card>
+                <Skeleton width={60} height={22} variant="rounded" sx={{ borderRadius: 999 }} />
+              </Box>
+            ))}
+          </Box>
+        ) : projects.length === 0 ? (
+          <Box sx={{ py: 6, textAlign: 'center', px: 2.5 }}>
+            <FolderOpenOutlined sx={{ fontSize: 36, color: 'text.disabled', mb: 1 }} />
+            <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'text.primary' }}>
+              No projects yet
+            </Typography>
+            <Typography sx={{ fontSize: 13, color: 'text.secondary', mt: 0.5, mb: 2 }}>
+              Create your first project to start tracking work
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<AddOutlined sx={{ fontSize: 15 }} />}
+              onClick={() => setOpenProjectModal(true)}
+              sx={{ fontSize: 13 }}
+            >
+              New project
+            </Button>
+          </Box>
+        ) : (
+          projects.map((project, idx) => {
+            const chip = statusChip[project.status];
+            return (
+              <Box
+                key={project.id}
+                onClick={() => navigate(`/projects/${project.id}`)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  px: 2.5,
+                  py: 1.5,
+                  cursor: 'pointer',
+                  borderBottom: idx < projects.length - 1 ? '0.5px solid' : 'none',
+                  borderColor: 'divider',
+                  '&:hover': { bgcolor: 'action.hover' },
+                }}
+              >
+                {/* Icon box */}
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 1.5,
+                    bgcolor: '#E1F5EE',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <FolderOpenOutlined sx={{ fontSize: 15, color: '#0F6E56' }} />
+                </Box>
+
+                {/* Title + client */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'text.primary' }} noWrap>
+                    {project.title}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
+                    <PersonOutlined sx={{ fontSize: 12, color: 'text.disabled' }} />
+                    <Typography sx={{ fontSize: 12, color: 'text.secondary' }} noWrap>
+                      {project.clients?.name ?? 'No client'}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Status chip */}
+                <Chip
+                  label={chip.label}
+                  size="small"
+                  sx={{
+                    height: 22,
+                    fontSize: 11,
+                    fontWeight: 500,
+                    bgcolor: chip.bgcolor,
+                    color: chip.color,
+                    '& .MuiChip-label': { px: 1.25 },
+                    flexShrink: 0,
+                  }}
+                />
+
+                {/* Actions */}
+                <IconButton
+                  size="small"
+                  onClick={e => {
+                    e.stopPropagation();
+                    setMenuAnchor(e.currentTarget);
+                    setSelectedProject(project);
+                  }}
+                  sx={{ color: 'text.disabled', flexShrink: 0 }}
+                >
+                  <MoreVertRounded sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Box>
+            );
+          })
+        )}
+      </Box>
 
       <Menu
         anchorEl={menuAnchor}
@@ -181,24 +225,33 @@ export const ProjectsPage = () => {
         onClose={handleMenuClose}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        slotProps={{
+          paper: {
+            sx: {
+              minWidth: 140,
+              border: '1px solid',
+              borderColor: 'divider',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            },
+          },
+        }}
       >
-        <MenuItem onClick={handleEdit}>
-          Edit
-        </MenuItem>
-        <MenuItem
-          onClick={handleDelete}
-        >
-          Delete
-        </MenuItem>
+        <MenuItem onClick={handleEdit} sx={{ fontSize: 13 }}>Edit</MenuItem>
+        <MenuItem onClick={handleDelete} sx={{ fontSize: 13, color: 'error.main' }}>Delete</MenuItem>
       </Menu>
 
+      {openProjectModal && (
+        <AddProjectModal initialData={selectedProject} resetForm={resetForm} source='projectsPage'/>
+      )}
 
-      {openProjectModal && <AddProjectModal initialData={selectedProject} resetForm={resetForm} />}
-
-      {warningType==='delete' && <WarningDialog title="Delete project" handleConfirm={handleConfirm} handleCancel={handleCancel} message="Do you really want to delete this project?"/>}
-
+      {warningType === 'delete' && (
+        <WarningDialog
+          title="Delete project"
+          handleConfirm={handleConfirm}
+          handleCancel={handleCancel}
+          message="Are you sure you want to delete this project? This cannot be undone."
+        />
+      )}
     </Box>
   );
 };
-
-

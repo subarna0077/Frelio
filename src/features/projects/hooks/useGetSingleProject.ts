@@ -1,19 +1,23 @@
-import {useQuery} from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../../../lib/supabase'
 import type { Project } from '../types/types'
 
-export const useGetSingleProject = (projectId?: string)=>{
+export const useGetSingleProject = (projectId?: string) => {
 
-    const getSingleProject = async ()=>{
-        const {data, error} = await supabase.from('projects').
-        select(`* , clients (
+
+
+    const getSingleProject = async () => {
+
+
+        const { data, error } = await supabase.from('projects').
+            select(`* , clients (
             id,
             name,
             phone,
-            address
-            )`).eq('id', projectId).single()
+            email
+            ), milestones(*)`).eq('id', projectId).single()
 
-        if(error) throw error;
+        if (error) throw error;
         return data;
     }
 

@@ -23,7 +23,7 @@ export const useEditProject = (project_id?: string) => {
         mutationFn: editProject,
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: ['projects']
+                queryKey: ['project', project_id]
             })
 
             queryClient.invalidateQueries({
