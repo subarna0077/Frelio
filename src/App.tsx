@@ -18,6 +18,15 @@ function App() {
 
     })
 
+    // Here the onAuthStateChange registers a listener that keeps listening forever, so in that case
+    // we need to cleanup. If supabase.auth.getSession(), then it is not necessary 
+    // because it is a one time fetch.
+
+    //NOTE: If anything keeps running after the effect finishes, you need cleanup to stop it. 
+
+    
+
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session) logout();
       if (event === 'SIGNED_IN') setUser({
@@ -30,10 +39,9 @@ function App() {
         name: session!.user.user_metadata.full_name,
         email: session!.user.email!
       })
-
-      return () => subscription.unsubscribe()
-
     })
+
+    return ()=> subscription.unsubscribe()
   }, [])
 
 
