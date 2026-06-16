@@ -627,7 +627,7 @@ export const ClientDetail = () => {
 
         </Box>
       </Box>
-      {openProjectModal && <AddProjectModal source='clientPage' clientPrefillId={id} />}
+      {openProjectModal && <AddProjectModal clientPrefillId={id} />}
     </Box>
   )
 }

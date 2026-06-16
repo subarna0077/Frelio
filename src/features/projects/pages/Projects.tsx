@@ -277,7 +277,7 @@ export const ProjectsPage = () => {
       </Menu>
 
       {openProjectModal && (
-        <AddProjectModal initialData={selectedProject} resetForm={resetForm} source='projectsPage' />
+        <AddProjectModal initialData={selectedProject} resetForm={resetForm} />
       )}
 
       {openClientAddModal && (

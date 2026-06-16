@@ -503,7 +503,7 @@ export const SingleProject = () => {
       {/* ── modals ────────────────────────────────────────────────────────── */}
       {openMsModal && <MilestoneModalForm projectId={id} />}
 
-      {openProjectModal && <AddProjectModal initialData={project} resetForm={() => setOpenProjectModal(false)} source='projectsPage' />}
+      {openProjectModal && <AddProjectModal initialData={project} resetForm={() => setOpenProjectModal(false)} />}
 
       {openInvModal && currentMilestone && project && (
         <InvoiceModalForm
