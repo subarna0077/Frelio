@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Box, Button, Typography, IconButton, Menu, MenuItem,
-  Skeleton, Chip,
+  Skeleton, Chip, Tooltip,
 } from '@mui/material';
 import {
   AddOutlined,
@@ -18,6 +18,9 @@ import { useProjectStore } from '../stores/ProjectStore';
 import { useDeleteProject } from '../hooks/useDeleteProject';
 import { useWarningDialogStore } from '../../../shared/hooks/useWarningDialogStore';
 import { WarningDialog } from '../../../shared/components/WarningDialog';
+import { useGetClients } from '../../clients/hooks/useGetClients';
+import { useClientStore } from '../../clients/stores/ClientStore';
+import { AddClientModal } from '../../clients/components/AddClientModal';
 
 
 const statusChip: Record<ProjectStatus, { bgcolor: string; color: string; label: string }> = {
@@ -33,12 +36,18 @@ export const ProjectsPage = () => {
   const openProjectModal = useProjectStore(state => state.openModal);
   const setOpenProjectModal = useProjectStore(state => state.setOpenModal);
 
+
+  const openClientAddModal = useClientStore(state => state.openModal)
+  const setOpenClientAddModal = useClientStore(state => state.setOpenModal)
+
   const warningType = useWarningDialogStore(state => state.type);
   const setWarningType = useWarningDialogStore(state => state.setType);
 
   const navigate = useNavigate();
   const { data: projects = [], isLoading: loading } = useGetProjects();
   const { mutate: deleteProject } = useDeleteProject();
+
+  const { data: clients } = useGetClients()
 
   console.log(projects)
 
@@ -88,14 +97,25 @@ export const ProjectsPage = () => {
             {projects.length} total project{projects.length !== 1 ? 's' : ''}
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddOutlined sx={{ fontSize: 15 }} />}
-          onClick={() => setOpenProjectModal(true)}
-          sx={{ fontSize: 13 }}
-        >
-          New project
-        </Button>
+
+        <Tooltip title={clients?.length === 0 ? "Add a client first before adding a project" : ''}>
+
+          <span>
+            <Button
+              variant="contained"
+              startIcon={<AddOutlined sx={{ fontSize: 15 }} />}
+              onClick={() => setOpenProjectModal(true)}
+              sx={{ fontSize: 13 }}
+              disabled={clients?.length === 0}
+            >
+              New project
+            </Button>
+
+          </span>
+
+        </Tooltip>
+
+
       </Box>
 
       {/* Project list */}
@@ -123,20 +143,36 @@ export const ProjectsPage = () => {
         ) : projects.length === 0 ? (
           <Box sx={{ py: 6, textAlign: 'center', px: 2.5 }}>
             <FolderOpenOutlined sx={{ fontSize: 36, color: 'text.disabled', mb: 1 }} />
-            <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'text.primary' }}>
-              No projects yet
-            </Typography>
-            <Typography sx={{ fontSize: 13, color: 'text.secondary', mt: 0.5, mb: 2 }}>
-              Create your first project to start tracking work
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddOutlined sx={{ fontSize: 15 }} />}
-              onClick={() => setOpenProjectModal(true)}
-              sx={{ fontSize: 13 }}
-            >
-              New project
-            </Button>
+
+            {clients?.length === 0 ?
+              <>
+                <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'text.primary' }}>You cannot add a project before adding client.</Typography>
+                <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'text.secondary', mt: 0.5, mb: 2 }}>Add your first client.</Typography>
+
+                <Button
+                  variant='contained'
+                  sx={{ fontSize: 13 }}
+                  onClick={() => setOpenClientAddModal(true)}
+                >Add client</Button>
+
+              </> :
+              <>
+                <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'text.primary' }}>
+                  No projects yet
+                </Typography>
+                <Typography sx={{ fontSize: 13, color: 'text.secondary', mt: 0.5, mb: 2 }}>
+                  Create your first project to start tracking work
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<AddOutlined sx={{ fontSize: 15 }} />}
+                  onClick={() => setOpenProjectModal(true)}
+                  sx={{ fontSize: 13 }}
+                >
+                  New project
+                </Button>
+              </>}
+
           </Box>
         ) : (
           projects.map((project, idx) => {
@@ -241,7 +277,11 @@ export const ProjectsPage = () => {
       </Menu>
 
       {openProjectModal && (
-        <AddProjectModal initialData={selectedProject} resetForm={resetForm} source='projectsPage'/>
+        <AddProjectModal initialData={selectedProject} resetForm={resetForm} source='projectsPage' />
+      )}
+
+      {openClientAddModal && (
+        <AddClientModal />
       )}
 
       {warningType === 'delete' && (
