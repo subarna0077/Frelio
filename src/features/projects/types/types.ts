@@ -5,7 +5,6 @@ import type { Milestone } from '../../milestone/types/types'
 export const AddProjectSchema = z.object({
     title: z.string().min(8, 'Add a valid title for this project.'),
     description: z.string().min(8, { message: 'Add a detailed description of this project' }).max(500, { message: 'Description cannot exceed 500 characters' }),
-    project_code: z.string().optional(),
     start_date: z.string().optional(),
     due_date: z.string().optional(),
 })

@@ -190,18 +190,6 @@ export const AddProjectModal = ({ initialData, resetForm, source, clientPrefillI
 
                     }
 
-
-
-
-                    <TextField
-                        label="Project code"
-                        fullWidth
-                        size="small"
-                        {...register('project_code')}
-                        slotProps={{ inputLabel: { sx: { fontSize: 13 } }, input: { sx: { fontSize: 13 } } }}
-                    />
-
-
                     {/* Dates — side by side */}
                     <Box sx={{ display: 'flex', gap: 1.5 }}>
                         <TextField
