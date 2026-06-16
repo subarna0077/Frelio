@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     TextField, Button, Box, IconButton, MenuItem, Typography,
 } from '@mui/material';
 import { CloseRounded } from '@mui/icons-material';
-import type { Client } from '../../clients/types/types';
 import type { Project, ProjectDataType } from '../types/types';
 import { useGetClients } from '../../clients/hooks/useGetClients';
 import { useForm } from 'react-hook-form';
@@ -18,20 +17,18 @@ import { useProjectStore } from '../stores/ProjectStore';
 interface AddProjectModalProps {
     initialData?: Project | null;
     resetForm?: () => void;
-    source: 'clientPage' | 'projectsPage';
     clientPrefillId?: string;
 }
 
 
 
-export const AddProjectModal = ({ initialData, resetForm, source, clientPrefillId }: AddProjectModalProps) => {
-    const { register, reset, handleSubmit, formState: {
+export const AddProjectModal = ({ initialData, resetForm, clientPrefillId }: AddProjectModalProps) => {
+    const { register, reset, handleSubmit, setValue, formState: {
         errors
     } } = useForm<ProjectDataType>({
         resolver: zodResolver(AddProjectSchema),
     });
 
-    const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const { mutate: createProject } = useCreateProject();
     const { mutate: editProject } = useEditProject(initialData?.id);
     const { data: clients } = useGetClients();
@@ -43,19 +40,11 @@ export const AddProjectModal = ({ initialData, resetForm, source, clientPrefillI
     const handleFormClose = () => {
         setOpenModal(false);
         resetForm?.();
-        setSelectedClient(null);
     };
 
 
 
     const onSubmit = (data: ProjectDataType) => {
-
-        const clientId = source === 'clientPage' ? clientPrefillId : selectedClient?.id;
-
-        if (!clientId) {
-            toast.error('Please select a client.');
-            return;
-        }
 
         if (initialData) {
             editProject(data, {
@@ -63,7 +52,7 @@ export const AddProjectModal = ({ initialData, resetForm, source, clientPrefillI
                 onError: (error) => toast.error(error.message),
             });
         } else {
-            createProject({ ...data, client_id: clientId }, {
+            createProject(data, {
                 onSuccess: () => { toast.success('Project created.'); handleFormClose(); },
                 onError: (error) => toast.error(error.message),
             });
@@ -74,18 +63,23 @@ export const AddProjectModal = ({ initialData, resetForm, source, clientPrefillI
         reset({
             title: initialData?.title ?? '',
             description: initialData?.description ?? '',
-            project_code: initialData?.project_code ?? '',
             start_date: initialData?.start_date ?? '',
             due_date: initialData?.due_date ?? '',
+            client_id: initialData?.client_id ?? ''
         });
     }, [initialData, reset]);
 
+  
+
     useEffect(() => {
-        if (initialData && clients) {
-            const found = clients.find(c => c.id === initialData.client_id);
-            if (found) setSelectedClient(found);
+
+        if (clientPrefillId) {
+            setValue(
+                'client_id', clientPrefillId
+            )
         }
-    }, [initialData, clients]);
+
+    }, [clientPrefillId])
 
     const isEdit = Boolean(initialData);
 
@@ -159,42 +153,38 @@ export const AddProjectModal = ({ initialData, resetForm, source, clientPrefillI
                         helperText={errors.description?.message}
                     />
 
-                    {!isEdit ?
+                    {!isEdit && !clientPrefillId && (
                         <TextField
                             label="Select client"
                             select
-                            value={selectedClient?.id}
-                            onChange={(e) => {
-                                // selectedClient is a whole client object
-                                const client = clients?.find(c => c.id === e.target.value);
-                                if (client) setSelectedClient(client);
-                            }}
+                            fullWidth
+                            size="small"
+                            error={!!errors.client_id}
+                            helperText={errors.client_id?.message}
+                            {...register('client_id')}
                         >
-                            {clients?.map((c) =>
-                                <MenuItem
-                                    key={c.id}
-                                    value={c.id}
-                                >
-                                    {c.name}
-                                </MenuItem>)}
-                        </TextField> :
+                            {clients?.map((c) => (
+                                <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                            ))}
+                        </TextField>
+                    )}
 
+                    {isEdit && (
                         <TextField
                             label="Select client"
                             select
+                            fullWidth
+                            size="small"
                             disabled
-                            value={initialData?.id}
+                            value={initialData?.client_id ?? ''}
                         >
-                            <MenuItem value={initialData?.id}>
+                            <MenuItem value={initialData?.client_id ?? ''}>
                                 {clients?.find(c => c.id === initialData?.client_id)?.name ?? ''}
                             </MenuItem>
-
                         </TextField>
+                    )}
 
 
-
-
-                    }
 
                     {/* Dates — side by side */}
                     <Box sx={{ display: 'flex', gap: 1.5 }}>
@@ -239,7 +229,7 @@ export const AddProjectModal = ({ initialData, resetForm, source, clientPrefillI
                 <Button
                     variant="outlined"
                     onClick={() => {
-                        reset({ title: '', description: '' });
+                        reset({ title: '', description: '', start_date: '', due_date: '', client_id: '' });
                         handleFormClose();
                     }}
                     sx={{ fontSize: 13, color: 'text.secondary', borderColor: 'divider' }}

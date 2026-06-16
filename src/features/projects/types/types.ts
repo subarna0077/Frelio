@@ -7,6 +7,7 @@ export const AddProjectSchema = z.object({
     description: z.string().min(8, { message: 'Add a detailed description of this project' }).max(500, { message: 'Description cannot exceed 500 characters' }),
     start_date: z.string().optional(),
     due_date: z.string().optional(),
+    client_id: z.string().min(1, 'Please select client')
 })
 
 export type ProjectDataType = z.infer<typeof AddProjectSchema>

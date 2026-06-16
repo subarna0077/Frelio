@@ -19,16 +19,19 @@ const getProjectCode = (title: string, existingCodes: string[]) => {
 }
 
 
-const createProjectApi = async (data: ProjectDataType, client_id: string, userId: string) => {
+const createProjectApi = async (data: ProjectDataType, userId: string) => {
 
 
     const { data: projectsList, error: projectFetchError } = await supabase.from('projects').select();
+
+    if(projectFetchError) throw projectFetchError;
+
+
 
     const projectCodeArray = projectsList?.map(project => project.project_code) ?? []
 
     const code = getProjectCode(data.title, projectCodeArray)
 
-    if(projectFetchError) throw projectFetchError;
 
     const { data: project, error } = await supabase
         .from('projects')
@@ -39,7 +42,7 @@ const createProjectApi = async (data: ProjectDataType, client_id: string, userId
             project_code: code ?? null,
             start_date: data.start_date || null,
             due_date: data.due_date || null,
-            client_id,
+            client_id: data.client_id,
             user_id: userId,
         })
         .select()
@@ -54,13 +57,12 @@ export const useCreateProject = () => {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (data: ProjectDataType & { client_id: string }) => {
+        mutationFn: (data: ProjectDataType) => {
             // data: ProjectDataType & {client_id: string} this creates an intersection type in typescript. 
             // It tells the ts compiler that a var or object must possess all the 
             //properties of the existing type and the additional property.
-            const { client_id, ...restData } = data;
             if (!user?.id) throw new Error('User not authenticated')
-            return createProjectApi(restData, client_id, user.id)
+            return createProjectApi( data,  user.id)
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['projects'] })
