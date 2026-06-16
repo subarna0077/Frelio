@@ -25,7 +25,9 @@ interface AddProjectModalProps {
 
 
 export const AddProjectModal = ({ initialData, resetForm, source, clientPrefillId }: AddProjectModalProps) => {
-    const { register, reset, handleSubmit } = useForm<ProjectDataType>({
+    const { register, reset, handleSubmit, formState: {
+        errors
+    } } = useForm<ProjectDataType>({
         resolver: zodResolver(AddProjectSchema),
     });
 
@@ -141,6 +143,8 @@ export const AddProjectModal = ({ initialData, resetForm, source, clientPrefillI
                         size="small"
                         {...register('title')}
                         slotProps={{ inputLabel: { sx: { fontSize: 13 } }, input: { sx: { fontSize: 13 } } }}
+                        error={!!errors.title}
+                        helperText={errors.title?.message}
                     />
 
                     <TextField
@@ -151,6 +155,8 @@ export const AddProjectModal = ({ initialData, resetForm, source, clientPrefillI
                         size="small"
                         {...register('description')}
                         slotProps={{ inputLabel: { sx: { fontSize: 13 } }, input: { sx: { fontSize: 13 } } }}
+                        error={!!errors.description}
+                        helperText={errors.description?.message}
                     />
 
                     {!isEdit ?
