@@ -37,8 +37,8 @@ const createProjectApi = async (data: ProjectDataType, client_id: string, userId
             description: data.description,
             status: 'active',
             project_code: code ?? null,
-            start_date: data.start_date ?? null,
-            due_date: data.due_date ?? null,
+            start_date: data.start_date || null,
+            due_date: data.due_date || null,
             client_id,
             user_id: userId,
         })
