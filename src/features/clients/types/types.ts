@@ -35,18 +35,21 @@ export type Address = {
 }
 
 const addressSchema = z.object({
-  address_line_1: z.string().min(1, "Required"),
+  address_line_1: z.string().min(1, "Address line 1 is required"),
   address_line_2: z.string().optional(),
-  city: z.string().min(1, 'Required'),
-  province_id: z.number().min(1, "Province required"), // for filtering districts in UI
-  district_id: z.number().min(1, "District required"),
+  city: z.string().min(1, 'Please enter your city'),
+  province_id: z.number().min(1, "Province is required"), // for filtering districts in UI
+  district_id: z.number().min(1, "District is required"),
 })
 
 
 // keep addressSchema as is — that's correct
 
 export const ClientAddSchema = z.object({
-  client_type: z.enum(['individual', 'business']),
+  client_type: z.enum(['individual', 'business'], {
+    // In zod enum, we cah set the errorMap to show the error.
+    errorMap: ()=> ({message: 'Please select a client type.'})
+  }),
   name: z.string().min(6, 'Enter full client name'),
   phone: z.string()
     .min(10, 'Phone number should be at least 10 digits')
