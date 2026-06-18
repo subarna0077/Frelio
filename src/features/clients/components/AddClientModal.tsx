@@ -89,6 +89,7 @@ export const AddClientModal = ({ initialData }: Props) => {
 
   const handleFormClose = () => {
     setOpenModal(false);
+    setActiveStep(0)
     form.reset();
   };
 
