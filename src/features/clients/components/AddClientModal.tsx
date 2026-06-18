@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, IconButton, Box, Typography, TextField, FormControlLabel, Checkbox, MenuItem
@@ -5,7 +6,7 @@ import {
 import {
   CloseRounded, PersonOutlined, BusinessOutlined,
 } from '@mui/icons-material';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import type { SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'react-hot-toast';
@@ -80,28 +81,26 @@ export const AddClientModal = ({ initialData, resetOnClose }: Props) => {
   console.log(provinces)
   console.log(resetOnClose)
 
+  const form = useForm<ClientFormType>({
+    resolver: zodResolver(ClientAddSchema),
+    defaultValues: {
+      currency: 'NPR',
+      billing_is_different: false,
 
-const form = useForm<ClientFormType>({
-  resolver: zodResolver(ClientAddSchema),
-  defaultValues: {
-    client_type: 'individual',
-    currency: 'NPR',
-    billing_is_different: false,
+      office_address: {
+        address_line_1: '',
+        address_line_2: '',
+        city: '',
+        province_id: 0,
+        district_id: 0,
+      },
 
-    office_address: {
-      address_line_1: '',
-      address_line_2: '',
-      city: '',
-      province_id: 0,
-      district_id: 0,
+      billing_address: undefined,
+      billing_name: '',
+      pan_number: '',
+      notes: '',
     },
-
-    billing_address: undefined,
-    billing_name: '',
-    pan_number: '',
-    notes: '',
-  },
-})
+  })
 
   const selectedType = form.watch('client_type');
   const selectedOfficeProvinceId = form.watch('office_address.province_id');
@@ -111,7 +110,6 @@ const form = useForm<ClientFormType>({
   const { data: districtsByOffice } = useGetDistrictsByProvince(selectedOfficeProvinceId);
   const { data: districtsByBilling } = useGetDistrictsByProvince(Number(selectedBillingProvinceId));
 
-  console.log(districtsByOffice)
 
   const handleFormClose = () => {
     setOpenModal(false);
@@ -133,6 +131,15 @@ const form = useForm<ClientFormType>({
   };
 
   const isEdit = Boolean(initialData);
+
+  // this useEffect fix is for the error faced during client creation when going through business type to individual, the billing address was asking for validation error.
+  useEffect(() => {
+    if (selectedType === 'individual') {
+      form.setValue('billing_is_different', false);
+      form.setValue('billing_address', undefined);
+    }
+
+  }, [selectedType])
 
   return (
     <Dialog
@@ -184,7 +191,10 @@ const form = useForm<ClientFormType>({
                 return (
                   <Box
                     key={type.value}
-                    onClick={() => form.setValue('client_type', type.value)}
+                    onClick={() => {
+                      form.setValue('client_type', type.value)
+                      form.trigger('client_type')
+                    }}
                     sx={{
                       flex: 1,
                       border: '1px solid',
@@ -225,6 +235,11 @@ const form = useForm<ClientFormType>({
                 );
               })}
             </Box>
+            {form.formState.errors.client_type && (
+              <Typography sx={{
+                fontSize: 12, color: 'error.main', mt: 0.5
+              }}>{form.formState.errors.client_type.message}</Typography>
+            )}
           </Box>
 
           {/* ── Basic info ── */}
@@ -312,41 +327,47 @@ const form = useForm<ClientFormType>({
               />
               <Box sx={{ display: 'flex', gap: 1.5 }}>
 
-                <TextField
-                  select
-                  label="Provinces"
-                 
-                  onChange={(e) => {
-                    form.setValue('office_address.province_id', Number(e.target.value))
-                  }}
-                  value={form.watch('office_address.province_id')}
-
-                  sx={{ flex: 1 }}>
-                  {provinces?.map((p) =>
-                    <MenuItem key={p.id} value={p.id}>
-                      {p.name}
-                    </MenuItem>
-                  )}
-
-                </TextField>
-
-                <TextField
-                  select
-                  label="Districts"
-                  sx={{ flex: 1 }}
-                  onChange={(e) => {
-                    form.setValue('office_address.district_id', Number(e.target.value))
-                  }}
-                  value={form.watch('office_address.district_id')}
-                >
-                  {districtsByOffice?.map(district =>
-                    <MenuItem
-                      value={district.id}
-                      key={district.id}
+                <Controller
+                  name="office_address.province_id"
+                  control={form.control}
+                  render={({ field }) => (
+                    <TextField
+                      select
+                      label="Provinces"
+                      {...field}
+                      error={!!form.formState.errors.office_address?.province_id}
+                      helperText={form.formState.errors.office_address?.province_id?.message}
+                      sx={{ flex: 1 }}
                     >
-                      {district.name}
-                    </MenuItem>)}
-                </TextField>
+                      {provinces?.map((p) => (
+                        <MenuItem key={p.id} value={p.id}>
+                          {p.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                />
+
+                <Controller
+                  name="office_address.district_id"
+                  control={form.control}
+                  render={({ field }) => (
+                    <TextField
+                      select
+                      label="Districts"
+                      {...field} // field attaches ref, onblur, onchange, value, and name attribute to the input
+                      error={!!form.formState.errors.office_address?.district_id}
+                      helperText={form.formState.errors.office_address?.district_id?.message}
+                      sx={{ flex: 1 }}
+                    >
+                      {districtsByOffice?.map((p) => (
+                        <MenuItem key={p.id} value={p.id}>
+                          {p.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                />
 
               </Box>
             </Box>
@@ -360,7 +381,6 @@ const form = useForm<ClientFormType>({
                   control={
                     <Checkbox
                       size="small"
-                      checked={billingIsDifferent}
                       {...form.register('billing_is_different')}
                       sx={{ '& .MuiSvgIcon-root': { fontSize: 16 } }}
                     />
@@ -381,48 +401,73 @@ const form = useForm<ClientFormType>({
                       label="Address line 1"
                       {...form.register('billing_address.address_line_1')}
                       {...fieldProps}
+                       error={!!form.formState.errors.billing_address?.address_line_1}
+                            helperText={form.formState.errors.billing_address?.address_line_1?.message}
                     />
                     <TextField
                       label="Address line 2"
                       {...form.register('billing_address.address_line_2')}
                       {...fieldProps}
+                       error={!!form.formState.errors.billing_address?.address_line_2}
+                            helperText={form.formState.errors.billing_address?.address_line_2?.message}
                     />
                     <TextField
                       label="City"
                       {...form.register('billing_address.city')}
                       {...fieldProps}
+                      error={!!form.formState.errors.billing_address?.city}
+                      helperText={form.formState.errors.billing_address?.city?.message}
+
+                      
+                      
                     />
                     <Box sx={{ display: 'flex', gap: 1.5 }}>
-                      <TextField
-                        select
-                        label="Select province"
-                        sx={{ flex: 1 }}
-                        value={form.watch('billing_address.province_id')}
-                        onChange={(e) => form.setValue('billing_address.province_id', Number(e.target.value))}
-                      >
-                        {provinces?.map(p =>
-                          <MenuItem key={p.id} value={p.id}>
-                            {p.name}
-                          </MenuItem>
+
+
+                      <Controller
+                        name='billing_address.province_id'
+                        control={form.control}
+                        render={({ field }) => (
+                          <TextField
+                            select
+                            label="Select province"
+                            {...field}
+                            sx={{ flex: 1 }}
+                            error={!!form.formState.errors.billing_address?.province_id}
+                            helperText={form.formState.errors.billing_address?.province_id?.message}
+                          >
+                            {provinces?.map(p =>
+                              <MenuItem key={p.id} value={p.id}>
+                                {p.name}
+                              </MenuItem>
+                            )}
+                          </TextField>
+
                         )}
-                      </TextField>
+                      />
 
 
-                      <TextField
-                        select
-                        label="Select districts"
-                        sx={{ flex: 1 }}
-                        value={form.watch('billing_address.district_id')}
-                        onChange={(e) => form.setValue('billing_address.district_id', Number(e.target.value))}
-                      >
-                        {districtsByBilling?.map(d =>
-                          <MenuItem
-                            value={d.id}
-                          >{d.name}</MenuItem>)}
+                      <Controller
+                        name='billing_address.district_id'
+                        control={form.control}
+                        render={({ field }) => (
+                          <TextField
+                            select
+                            label="Select districts"
+                            sx={{ flex: 1 }}
+                            {...field}
+                             error={!!form.formState.errors.billing_address?.district_id}
+                            helperText={form.formState.errors.billing_address?.district_id?.message}
+                          >
+                            {districtsByBilling?.map(d =>
+                              <MenuItem
+                                value={d.id}
+                                key={d.id}
+                              >{d.name}</MenuItem>)}
 
-                      </TextField>
-
-
+                          </TextField>
+                        )}
+                      />
                     </Box>
                   </Box>
                 </Box>
