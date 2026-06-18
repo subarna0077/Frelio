@@ -78,8 +78,6 @@ export const AddClientModal = ({ initialData, resetOnClose }: Props) => {
   const { mutate: createClient } = useCreateClient();
   const { mutate: editClient } = useEditClient();
   const { data: provinces } = useGetProvince();
-  console.log(provinces)
-  console.log(resetOnClose)
 
   const form = useForm<ClientFormType>({
     resolver: zodResolver(ClientAddSchema),
@@ -496,7 +494,7 @@ export const AddClientModal = ({ initialData, resetOnClose }: Props) => {
         >
           Cancel
         </Button>
-        <Button variant="contained" type="submit" sx={{ fontSize: 13 }} onClick={() => console.log('errors', form.formState.errors)}>
+        <Button variant="contained" type="submit" sx={{ fontSize: 13 }}>
           {isEdit ? 'Save changes' : 'Create client'}
         </Button>
       </DialogActions>
