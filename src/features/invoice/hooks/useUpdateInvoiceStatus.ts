@@ -20,6 +20,13 @@ export const useUpdateInvoiceStatus = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ['invoices']
+            }),
+             queryClient.invalidateQueries({
+                queryKey: ['clients']
+            }),
+            queryClient.invalidateQueries({
+                queryKey: ['client'],
+                exact: false
             })
 
         }
