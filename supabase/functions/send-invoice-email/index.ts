@@ -18,11 +18,30 @@ Deno.serve(async (req) => {
 
     const now = new Date().toISOString();
 
+    const {data: existingInvoice, error: fetchError} = await supabase.from('invoices').select("*, clients(*)").eq("id", invoice_id).single();
+
+    if(fetchError) throw fetchError
+
+    const {data: profile, error: profileError} = await supabase.from("profiles").select("full_name, phone").eq("id", existingInvoice.user_id).single()
+
+    if(profileError) throw profileError;
+
+    const client_snapshot = {
+      name: existingInvoice.clients.name ?? null,
+      email: existingInvoice.clients.email ?? null,
+    }
+
+    const sender_snapshot = {
+      name: profile?.full_name ?? null,
+    };
+
     const { data: updatedInvoice, error: updatedError } = await supabase
       .from("invoices")
       .update({
         status: "sent",
         sent_at: now,
+        client_snapshot,
+        sender_snapshot
       })
       .eq("id", invoice_id)
       .select("*, clients(*)")
