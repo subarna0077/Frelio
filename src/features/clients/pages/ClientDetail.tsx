@@ -1,6 +1,6 @@
 import {
   Box, Typography, Chip, Button, IconButton,
-  Avatar, LinearProgress, Breadcrumbs, Link, Skeleton, Tooltip, InputBase
+  Avatar, LinearProgress, Breadcrumbs, Link, Skeleton, InputBase
 } from '@mui/material'
 import {
   NavigateNext,
@@ -8,9 +8,7 @@ import {
   PhoneOutlined,
   EditOutlined,
   AddOutlined,
-  SendOutlined,
   ReceiptOutlined,
-  DeleteOutlined, 
   CalendarTodayOutlined,
   LocationOnOutlined,
   CancelOutlined
@@ -145,7 +143,6 @@ const EditableInfoRow = ({ label, registration }: {
   </Box>
 )
 
-// ── page ──────────────────────────────────────────────────────────────────────
 
 export const ClientDetail = () => {
   const { id } = useParams<{ id: string }>()
@@ -163,18 +160,33 @@ export const ClientDetail = () => {
   const watchEmail = watch('email')
   console.log(watchEmail)
 
-  // ── derived metrics ───────────────────────────────────────────────────────
 
   const invoices = client?.invoices ?? []
   const projects = client?.projects ?? []
+  const milestones = client?.projects.flatMap(project => project.milestones) ?? []
 
-  const totalBilled = invoices.reduce((s, i) => s + Number(i.total), 0)
-  const totalPaid = invoices
-    .filter(i => i.milestones?.status === 'paid')
-    .reduce((s, i) => s + Number(i.total), 0)
-  const outstanding = invoices
-    .filter(i => i.milestones?.status === 'invoiced')
-    .reduce((s, i) => s + Number(i.total), 0)
+
+  const totalBilled = milestones.filter(ml => ml?.status === 'invoiced' || ml?.status === 'paid').reduce((sum, el) => {
+    if (!el) return 0;
+    return sum + el.amount
+  }, 0)
+
+  const totalPaid = milestones.filter(ml => ml?.status === 'paid')
+    .reduce((s, i) => s + Number(i?.amount), 0)
+
+  const outstanding = projects.reduce((projectSum, project) => {
+    const invoicedAmount =
+      project.milestones?.reduce((milestoneSum, milestone) => {
+        return milestone.status === 'invoiced'
+          ? milestoneSum + milestone.amount
+          : milestoneSum;
+      }, 0) ?? 0;
+
+    return projectSum + invoicedAmount;
+  }, 0);
+
+  console.log(outstanding)
+
   const collectionRate = totalBilled > 0 ? Math.round((totalPaid / totalBilled) * 100) : 0
   const isHealthy = totalBilled === 0 || outstanding / totalBilled < 0.4
   const activeProjectCount = projects.filter(p => p.status === 'active').length
@@ -237,30 +249,6 @@ export const ClientDetail = () => {
             {client.name}
           </Typography>
         </Breadcrumbs>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<SendOutlined sx={{ fontSize: 13 }} />}
-            sx={{ fontSize: 12, borderColor: 'divider', color: 'text.secondary' }}
-          >
-            Send invoice
-          </Button>
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<EditOutlined sx={{ fontSize: 13 }} />}
-            sx={{ fontSize: 12 }}
-          >
-            Edit client
-          </Button>
-          <Tooltip title="Delete client" slotProps={{ tooltip: { sx: { fontSize: 12 } } }}>
-            <IconButton size="small" sx={{ color: 'error.main', border: '1px solid', borderColor: 'error.light', borderRadius: 1.5 }}>
-              <DeleteOutlined sx={{ fontSize: 16 }} />
-            </IconButton>
-          </Tooltip>
-        </Box>
       </Box>
 
       {/* Hero card */}
@@ -484,7 +472,7 @@ export const ClientDetail = () => {
               projects.map((project, idx) => {
                 const milestones = project.milestones ?? []
                 const total = milestones.length
-                const completed = milestones.filter(m => m.status==='completed').length
+                const completed = milestones.filter(m => m.status === 'completed').length
                 const progress = total > 0 ? Math.round((completed / total) * 100) : 0
                 const projectValue = milestones.reduce((s, m) => s + Number(m.amount ?? 0), 0)
                 const chip = projectChip[project.status as ProjectStatus] ?? projectChip['active']
@@ -568,6 +556,7 @@ export const ClientDetail = () => {
                 variant="contained"
                 startIcon={<AddOutlined sx={{ fontSize: 13 }} />}
                 sx={{ fontSize: 12 }}
+                disabled
               >
                 New invoice
               </Button>
@@ -585,7 +574,7 @@ export const ClientDetail = () => {
                   return (
                     <Box
                       key={invoice.id}
-                      onClick = {()=> navigate(`/invoices/${invoice.id}`)}
+                      onClick={() => navigate(`/invoices/${invoice.id}`)}
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
@@ -609,7 +598,7 @@ export const ClientDetail = () => {
                         {fmtNPR(Number(invoice.total))}
                       </Typography>
                       <Chip
-                        
+                        label={invoice.status}
                         size="small"
                         sx={{
                           height: 22,
