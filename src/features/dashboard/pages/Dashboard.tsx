@@ -233,7 +233,7 @@ export const Dashboard = () => {
           ) : (
             activeProjects.map((project, idx) => {
               const milestones = project.milestones ?? [];
-              const completed = milestones.filter(ml => ml.status==='completed').length;
+              const completed = milestones.filter(ml => ml.status==='paid').length;
               const total = milestones.length;
               const progress = total > 0 ? (completed / total) * 100 : 0;
 
