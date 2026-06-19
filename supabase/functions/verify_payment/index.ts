@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
         console.log(khaltiData)
 
         if (khaltiData.status !== "Completed") {
-            return new Response(JSON.stringify({ message: "Payment Not completed", data }), {
+            return new Response(JSON.stringify({ message: "Payment Not completed" }), {
                 status: 400,
                 headers: corsHeaders,
             });
@@ -67,9 +67,18 @@ Deno.serve(async (req) => {
                 status: 'paid',
             })
             .eq("id", orderID)
+            .select()
             .single();
 
         if (error) throw error;
+
+
+        const { data: updatedMs, error: msError } = await supabase.from("milestones").update({
+            status: "paid"
+        }).eq("id", updatedInvoice?.milestone_id)
+
+        if (msError) throw msError;
+
 
         return new Response(
             JSON.stringify({
