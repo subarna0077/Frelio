@@ -1,7 +1,8 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../../lib/supabase'
 
 export const useVerifyPayment = () => {
+    const qc = useQueryClient()
 
     const verifyPayment = async ({pidx, orderId}: {pidx: string, orderId: string}) => {
 
@@ -18,8 +19,10 @@ export const useVerifyPayment = () => {
 
     return useMutation({
         mutationFn: verifyPayment,
-        onSuccess: (data)=> {
-            console.log(data);
+        onSuccess: ()=> {
+            qc.invalidateQueries({
+                queryKey: ['invoices']
+            }) 
         }
     })
 }

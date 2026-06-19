@@ -5,7 +5,6 @@ export const useSendInvoice = () => {
     const qc = useQueryClient();
 
     const sendInvoice = async ({invoice_id ,public_token}: {invoice_id: string, public_token: string}) => {
-        console.log(invoice_id)
 
         const { data, error } = await supabase.functions.invoke('send-invoice-email', {
             body: {

@@ -5,18 +5,18 @@ import type { Project } from "../../projects/types/types";
 
 
 export type SenderSnapShot = {
-    name: string
-    email: string | null
-    address: string | null
-    pan_number: string | null
+    name?: string
+    email?: string | null
+    address?: string | null
+    pan_number?: string | null
 
 }
 
 export type ClientSnapShot = {
-    name: string
-    email: string | null
-    address: string | null
-    pan_number: string | null
+    name?: string
+    email?: string | null
+    address?: string | null
+    pan_number?: string | null
 
 }
 
@@ -63,7 +63,7 @@ export interface Invoice {
 
    
     clients: Pick<Client, 'name'| 'id' | 'address' | 'phone' | 'email' > | null,
-    projects: Pick<Project, 'id' | 'title' | 'status'> | null,
+    projects: Pick<Project, 'id' | 'title' | 'status' | 'project_code'> | null,
     invoice_items: InvoiceItems[],
     milestones?: Milestone
 
