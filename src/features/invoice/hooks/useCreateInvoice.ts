@@ -42,6 +42,7 @@ export const useCreateInvoice = (client_id?: string, project_id?: string) => {
         amount_due: data.total,            
         amount_paid: 0,
         public_token: crypto.randomUUID(),
+        
       })
       .select()
       .single()
@@ -69,6 +70,10 @@ export const useCreateInvoice = (client_id?: string, project_id?: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       queryClient.invalidateQueries({ queryKey: ['project', project_id] })
+      queryClient.invalidateQueries({
+        queryKey: ['client'],
+        exact: false,
+      })
     }
   })
 }
