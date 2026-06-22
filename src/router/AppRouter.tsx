@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import { Login } from '../features/auth/pages/Login'
 import { Register } from '../features/auth/pages/Register'
 import { ProtectedRoute } from '../shared/components/ProtectedRoute'
@@ -13,12 +13,13 @@ import { ClientPortal } from '../shared/pages/ClientPortal'
 import { PaymentSuccessPortal } from '../shared/pages/PaymentSuccessPortal'
 import { Settings } from '../features/auth/pages/Settings'
 import { ClientDetail } from '../features/clients/pages/ClientDetail'
+import LandingPage from '../shared/pages/LandingPage'
 export const AppRouter = () => {
 
     return (
 
         <Routes>
-            <Route path='/' element={<Navigate to='/login' />}>
+            <Route path='/' element={<LandingPage/>}>
 
             </Route>
             <Route path='/login' element={<Login />}></Route>
