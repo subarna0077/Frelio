@@ -125,7 +125,7 @@ export const InvoiceDetail = () => {
             >
                 <MetaRow icon={<PersonOutlined sx={{ fontSize: 15, color: 'text.disabled' }} />} label="Client" value={invoice.clients?.name ?? '—'} />
                 <MetaRow icon={<CalendarTodayOutlined sx={{ fontSize: 15, color: 'text.disabled' }} />} label="Due date" value={invoice.due_date} />
-                <MetaRow icon={<FolderOpenOutlined sx={{ fontSize: 15, color: 'text.disabled' }} />} label="Project" value={invoice.project_id} />
+                <MetaRow icon={<FolderOpenOutlined sx={{ fontSize: 15, color: 'text.disabled' }} />} label="Project" value={invoice.projects?.title ?? ''} />
                 <MetaRow icon={<PersonOutlined sx={{ fontSize: 15, color: 'text.disabled' }} />} label="Sent by" value={user?.name ?? '—'} />
             </Box>
 

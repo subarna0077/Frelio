@@ -228,6 +228,11 @@ const screenshots = [
     desc: 'Revenue, recent activity, and upcoming deadlines — all at a glance.',
   },
   {
+    file: 'client',
+    title: 'Manage your client',
+    desc: 'See each details of your client, .... (fix this)',
+  },
+  {
     file: 'project_page',
     title: 'Projects',
     desc: 'Every project broken into milestones. Visual progress bar, milestone status, amounts at a glance.',
@@ -239,26 +244,17 @@ const screenshots = [
 
   },
   {
-    file: 'invoice_creation',
+    file: 'invoice',
     title: 'Generate invoices',
     desc: 'Create Invoice based on milestone directly - no hassle, auto generation line items'
 
   },
   {
-    file: 'invoice_detail',
-    title: 'Invoice Detail',
-    desc: 'Clean invoice view with one-click PDF download and a send button that emails the client instantly.',
-  },
-  {
     file: 'public_portal',
     title: 'Client Portal',
-    desc: "What your client sees — a clean invoice they can review and pay without needing an account.",
+    desc: "What your client sees — a clean invoice they can review and pay without needing an account. We have khalti payment integration.",
   },
-  {
-    file: 'khalti_integration',
-    title: 'Pay via khalti',
-    desc: 'Payment gateway Khalti integrated for nepali clients - easy, fast and reliable'
-  }
+
 ]
 
 // ── sections ───────────────────────────────────────────────────────────────────
@@ -586,54 +582,83 @@ const ScreenshotsSection = () => (
         </Typography>
       </Box>
 
+
       <Box sx={{
         display: 'grid',
         gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
         gap: 3,
       }}>
+
         {screenshots.map(s => (
-          <Box key={s.file}>
-            {/*
+
+          <Box sx={{
+            border: `1.5px solid ${C.border}`,
+            borderRadius: 2,
+            overflow: 'hidden',
+            boxShadow: '0 12px 40px rgba(0,0,0,0.09)',
+          }}>
+            {/* browser chrome */}
+            <Box sx={{
+              px: 2, py: 1.25, bgcolor: C.bgSubtle,
+              borderBottom: `1px solid ${C.border}`,
+              display: 'flex', alignItems: 'center', gap: 0.75,
+            }}>
+              {['#F87171', '#FBBF24', '#34D399'].map((c, i) => (
+                <Box key={i} sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: c, opacity: 0.55 }} />
+              ))}
+            </Box>
+            <Box key={s.file}>
+              {/*
               Drop your screenshot files in /public/screenshots/<file>.png
               They will show automatically once added.
             */}
-            <Box sx={{
-              aspectRatio: '16 / 10',
-              bgcolor: C.bgSubtle,
-              border: `1px solid ${C.border}`,
-              borderRadius: 2,
-              overflow: 'hidden',
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Box
-                component="img"
-                src={`/screenshots/${s.file}.png`}
-                alt={s.title}
-                sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0 }}
-                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                  e.currentTarget.style.display = 'none'
-                }}
-              />
-              {/* Shown only when no screenshot is found */}
-              <Typography sx={{
-                fontFamily: SANS, fontSize: 12,
-                color: C.border, pointerEvents: 'none',
+              <Box sx={{
+                aspectRatio: '16 / 10',
+                bgcolor: C.bgSubtle,
+                border: `1px solid ${C.border}`,
+                borderRadius: 2,
+                overflow: 'hidden',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}>
-                {s.title} — add /public/screenshots/{s.file}.png
+                <Box
+                  component="img"
+                  src={`/screenshots/${s.file}.png`}
+                  alt={s.title}
+                  sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0, p:2 }}
+                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                    e.currentTarget.style.display = 'none'
+                  }}
+                />
+                {/* Shown only when no screenshot is found */}
+                <Typography sx={{
+                  fontFamily: SANS, fontSize: 12,
+                  color: C.border, pointerEvents: 'none',
+                }}>
+                  {s.title} — add /public/screenshots/{s.file}.png
+                </Typography>
+              </Box>
+              <Typography sx={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: C.text, mt: 1.5, mb: 0.5 }}>
+                {s.title}
+              </Typography>
+              <Typography sx={{ fontFamily: SANS, fontSize: 13, color: C.textSec, lineHeight: 1.6 }}>
+                {s.desc}
               </Typography>
             </Box>
-            <Typography sx={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: C.text, mt: 1.5, mb: 0.5 }}>
-              {s.title}
-            </Typography>
-            <Typography sx={{ fontFamily: SANS, fontSize: 13, color: C.textSec, lineHeight: 1.6 }}>
-              {s.desc}
-            </Typography>
+
+
           </Box>
+
+
         ))}
       </Box>
+
+
+
+
+
     </Container>
   </Box>
 )

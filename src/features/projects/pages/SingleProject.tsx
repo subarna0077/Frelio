@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   Box, Typography, Button, Chip, LinearProgress,
-  List, ListItem, Tooltip
+  List, ListItem, Tooltip, Stack
 } from '@mui/material'
 import {
   EditOutlined,
@@ -39,19 +39,19 @@ import { useWarningDialogStore } from '../../../shared/hooks/useWarningDialogSto
 // ── status config ────────────────────────────────────────────────────────────
 
 const projectStatusConfig: Record<ProjectStatus, { label: string; color: string; bg: string }> = {
-  active:    { label: 'Active',    bg: '#E1F5EE', color: '#0F6E56' },
-  on_hold:   { label: 'On hold',   bg: '#FAEEDA', color: '#854F0B' },
+  active: { label: 'Active', bg: '#E1F5EE', color: '#0F6E56' },
+  on_hold: { label: 'On hold', bg: '#FAEEDA', color: '#854F0B' },
   completed: { label: 'Completed', bg: '#EAF3DE', color: '#3B6D11' },
   cancelled: { label: 'Cancelled', bg: '#FCEBEB', color: '#A32D2D' },
 }
 
 const milestoneStatusConfig: Record<MilestoneStatus, { label: string; bg: string; color: string }> = {
-  pending:     { label: 'Pending',     bg: '#F1EFE8', color: '#5F5E5A' },
+  pending: { label: 'Pending', bg: '#F1EFE8', color: '#5F5E5A' },
   in_progress: { label: 'In progress', bg: '#FAEEDA', color: '#854F0B' },
-  completed:   { label: 'Completed',   bg: '#E6F1FB', color: '#185FA5' },
-  invoiced:    { label: 'Invoiced',    bg: '#EEEDFE', color: '#534AB7' },
-  paid:        { label: 'Paid',        bg: '#EAF3DE', color: '#3B6D11' },
-  cancelled:   { label: 'Cancelled',   bg: '#FCEBEB', color: '#A32D2D' },
+  completed: { label: 'Completed', bg: '#E6F1FB', color: '#185FA5' },
+  invoiced: { label: 'Invoiced', bg: '#EEEDFE', color: '#534AB7' },
+  paid: { label: 'Paid', bg: '#EAF3DE', color: '#3B6D11' },
+  cancelled: { label: 'Cancelled', bg: '#FCEBEB', color: '#A32D2D' },
 }
 
 // ── component ────────────────────────────────────────────────────────────────
@@ -60,10 +60,9 @@ export const SingleProject = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  if (!id) return <Typography sx={{p:3}} color="text.secondary">Project ID not found.</Typography>
+  if (!id) return <Typography sx={{ p: 3 }} color="text.secondary">Project ID not found.</Typography>
 
   const { data: project } = useGetSingleProject(id)
-  console.log(project)
   const { mutate: updateMs } = useUpdateMilestoneStatus()
   const { mutate: updateProjectStatus } = useUpdateProjectStatus(id)
 
@@ -149,18 +148,24 @@ export const SingleProject = () => {
         borderRadius: 2,
         p: 2.5,
         display: 'flex',
-        justifyContent: 'space-between',
+        flexDirection: { xs: 'column', sm: 'row' },
         alignItems: 'flex-start',
         gap: 2,
       }}>
-        {/* left: title + meta */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-          <Typography sx={{ fontSize: 18, fontWeight: 500, lineHeight: 1.3 }}>
+        {/* left: title + meta — flex: 1 + minWidth: 0 lets it shrink and not push buttons off */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, flex: 1, minWidth: 0 }}>
+          <Typography sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 500, lineHeight: 1.3 }}>
             {project?.title}
           </Typography>
 
           {project?.description && (
-            <Typography sx={{ fontSize: 13, color: 'text.secondary', lineHeight: 1.6, maxWidth: 520 }}>
+            <Typography sx={{
+              fontSize: 13,
+              color: 'text.secondary',
+              lineHeight: 1.6,
+              // Allow wrapping naturally within the constrained left column
+              wordBreak: 'break-word',
+            }}>
               {project.description}
             </Typography>
           )}
@@ -185,7 +190,14 @@ export const SingleProject = () => {
           </Box>
 
           {/* client + dates */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 0.25, flexWrap: 'wrap' }}>
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            flexDirection: 'row',
+            gap: 2,
+            mt: 0.25,
+            flexWrap: 'wrap',
+          }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
               <PersonOutlined sx={{ fontSize: 15, color: 'text.disabled' }} />
               <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>
@@ -209,15 +221,34 @@ export const SingleProject = () => {
           </Box>
         </Box>
 
-        {/* right: action buttons */}
-        <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, alignItems: 'center' }}>
+        {/* right: action buttons
+            - flexShrink: 0 prevents the button group from being squeezed
+            - flexDirection column on sm+ keeps buttons stacked so they never overlap
+            - on mobile: row wrap under the info block */}
+        <Stack
+          spacing={1}
+          useFlexGap
+          sx={{
+            flexShrink: 0,
+            alignItems: { xs: 'flex-start', sm: 'flex-end' },
+            width: { xs: '100%', sm: 'auto' },
+            // Minimum width so buttons always have room to render their labels
+            minWidth: { sm: 148 },
+            direction: {
+              xs: 'row',
+              sm: 'column'
+            },
+            flexWrap: 'wrap'
+
+          }}
+        >
           {!isFinal && (
             <Button
               size="small"
               variant="outlined"
               startIcon={<EditOutlined />}
               onClick={() => setOpenProjectModal(true)}
-              sx={{ color: 'text.secondary', borderColor: 'divider', fontSize: 13 }}
+              sx={{ color: 'text.secondary', borderColor: 'divider', fontSize: 13, width: { sm: '100%' } }}
             >
               Edit
             </Button>
@@ -229,7 +260,7 @@ export const SingleProject = () => {
               variant="outlined"
               startIcon={<PauseCircleOutlineOutlined />}
               onClick={() => updateProjectStatus('on_hold')}
-              sx={{ color: 'text.secondary', borderColor: 'divider', fontSize: 13 }}
+              sx={{ color: 'text.secondary', borderColor: 'divider', fontSize: 13, width: { sm: '100%' } }}
             >
               On hold
             </Button>
@@ -241,7 +272,7 @@ export const SingleProject = () => {
               variant="outlined"
               startIcon={<PlayCircleOutlineOutlined />}
               onClick={() => updateProjectStatus('active')}
-              sx={{ color: 'text.secondary', borderColor: 'divider', fontSize: 13 }}
+              sx={{ color: 'text.secondary', borderColor: 'divider', fontSize: 13, width: { sm: '100%' } }}
             >
               Resume
             </Button>
@@ -253,7 +284,7 @@ export const SingleProject = () => {
               variant="outlined"
               startIcon={<CancelOutlined />}
               onClick={() => setWarningType('project-cancel')}
-              sx={{ color: 'error.main', borderColor: 'error.light', fontSize: 13 }}
+              sx={{ color: 'error.main', borderColor: 'error.light', fontSize: 13, width: { sm: '100%' } }}
             >
               Cancel
             </Button>
@@ -263,25 +294,26 @@ export const SingleProject = () => {
             title={!canComplete ? 'All milestones must be paid before completing' : ''}
             slotProps={{ tooltip: { sx: { fontSize: 12 } } }}
           >
-            <span>
+            {/* span must also stretch so the button fills the column */}
+            <span style={{ width: 'inherit' }}>
               <Button
                 size="small"
                 variant="contained"
                 startIcon={<TaskAltOutlined />}
                 disabled={!canComplete || isFinal}
                 onClick={() => updateProjectStatus('completed')}
-                sx={{ fontSize: 13 }}
+                sx={{ fontSize: 13, width: { sm: '100%' } }}
               >
                 Mark complete
               </Button>
             </span>
           </Tooltip>
-        </Box>
+        </Stack>
       </Box>
 
       {/* ── progress + financials ──────────────────────────────────────────── */}
       <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 2.5 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 0.5 }}>
           <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'text.secondary' }}>
             Progress
           </Typography>
@@ -301,18 +333,24 @@ export const SingleProject = () => {
           }}
         />
 
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, mt: 2 }}>
+        {/* Financial summary grid — 2 cols on mobile, 4 on sm+ */}
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+          gap: 1,
+          mt: 2,
+        }}>
           {[
-            { label: 'Total contract', amount: totalMsAmount,      color: 'text.primary' },
-            { label: 'Invoiced',       amount: totalInvoicedAmount, color: '#185FA5' },
-            { label: 'Paid',           amount: totalPaidAmount,     color: '#3B6D11' },
-            { label: 'Outstanding',    amount: totalOutstanding,    color: '#854F0B' },
+            { label: 'Total contract', amount: totalMsAmount, color: 'text.primary' },
+            { label: 'Invoiced', amount: totalInvoicedAmount, color: '#185FA5' },
+            { label: 'Paid', amount: totalPaidAmount, color: '#3B6D11' },
+            { label: 'Outstanding', amount: totalOutstanding, color: '#854F0B' },
           ].map(item => (
             <Box
               key={item.label}
               sx={{ bgcolor: 'action.hover', borderRadius: 1.5, p: '12px 14px' }}
             >
-              <Typography sx={{ fontSize: 15, fontWeight: 500, color: item.color }}>
+              <Typography sx={{ fontSize: { xs: 13, sm: 15 }, fontWeight: 500, color: item.color }}>
                 NPR {item.amount.toLocaleString()}
               </Typography>
               <Typography sx={{ fontSize: 11, color: 'text.disabled', mt: 0.25, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -378,9 +416,10 @@ export const SingleProject = () => {
                 disablePadding
                 sx={{
                   display: 'flex',
+                  flexDirection: { xs: 'column', sm: 'row' },
                   justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 2,
+                  alignItems: { xs: 'flex-start', sm: 'center' },
+                  gap: { xs: 1, sm: 2 },
                   py: 1.5,
                   borderBottom: '0.5px solid',
                   borderColor: 'divider',
@@ -389,7 +428,7 @@ export const SingleProject = () => {
                 }}
               >
                 {/* left: index + info */}
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, flex: 1, minWidth: 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, flex: 1, minWidth: 0, width: { xs: '100%', sm: 'auto' } }}>
                   <Typography sx={{ fontSize: 11, color: 'text.disabled', fontFamily: 'monospace', pt: '2px', minWidth: 20 }}>
                     {String(index + 1).padStart(2, '0')}
                   </Typography>
@@ -421,8 +460,17 @@ export const SingleProject = () => {
                   </Box>
                 </Box>
 
-                {/* right: chip + action */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+                {/* right: chip + action — on mobile, shift right with ml: auto */}
+                <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  flexShrink: 0,
+                  // On mobile: full row, pushed to the right via marginLeft auto on first child
+                  width: { xs: '100%', sm: 'auto' },
+                  justifyContent: { xs: 'flex-end', sm: 'flex-end' },
+                  pl: { xs: '32px', sm: 0 }, // indent to align under title (past the index number)
+                }}>
                   <Chip
                     label={msCfg.label}
                     size="small"

@@ -1,110 +1,119 @@
-import { useEffect } from 'react';
+import { useEffect } from 'react'
 import {
   Box, Dialog, DialogContent, DialogActions,
   Typography, Stack, TextField,
-  IconButton, Button, Chip,
-  CircularProgress, Divider,
-} from '@mui/material';
+  IconButton, Button, Divider,
+  CircularProgress, InputAdornment,
+} from '@mui/material'
 import {
   CloseRounded, AddRounded, DeleteOutlineRounded,
-  ReceiptRounded,
-} from '@mui/icons-material';
-import { z } from 'zod';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useInvoiceStore } from '../stores/InvoiceStore';
-import { useParams } from 'react-router-dom';
-import { useCreateInvoice } from '../hooks/useCreateInvoice';
-import type { Project } from '../../projects/types/types';
-import type { Milestone } from '../../milestone/types/types';
+  FolderOpenOutlined, PersonOutlineOutlined, FlagOutlined,
+} from '@mui/icons-material'
+import { z } from 'zod'
+import { useForm, useFieldArray } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useInvoiceStore } from '../stores/InvoiceStore'
+import { useParams } from 'react-router-dom'
+import { useCreateInvoice } from '../hooks/useCreateInvoice'
+import type { Project } from '../../projects/types/types'
+import type { Milestone } from '../../milestone/types/types'
 import { toast } from 'react-hot-toast'
-import { useUpdateMilestoneStatus } from '../../milestone/hooks/useUpdateMilestoneStatus';
-import type { Invoice } from '../types/types';
+import { useUpdateMilestoneStatus } from '../../milestone/hooks/useUpdateMilestoneStatus'
+import type { Invoice } from '../types/types'
 
-const TAX_RATE = 0.13  // 13% VAT Nepal
+const TAX_RATE = 0.13
 
-// ── Schemas ────────────────────────────────────────────────────────────────
+// ── Schemas ─────────────────────────────────────────────────────────────────
 
 export const InvoiceItemSchema = z.object({
   description: z.string().min(1, 'Description is required'),
-  amount: z.number({ message: 'Enter a valid amount' }).min(1, 'Must be greater than 0'),
+  amount:      z.number({ message: 'Enter a valid amount' }).min(1, 'Must be greater than 0'),
 })
 
 export const InvoiceSchema = z.object({
   milestone_id: z.string().uuid(),
-  due_date: z.string().optional(),
-  notes: z.string().optional(),
-  items: z.array(InvoiceItemSchema).min(1, 'Add at least one line item'),
+  due_date:     z.string().optional(),
+  notes:        z.string().optional(),
+  items:        z.array(InvoiceItemSchema).min(1, 'Add at least one line item'),
 })
 
 export type InvoiceFormType = z.infer<typeof InvoiceSchema>
 
-// ── Props ──────────────────────────────────────────────────────────────────
+// ── Props ───────────────────────────────────────────────────────────────────
 
 interface Props {
-  client_id: string
-  project_data: Project
-  preSelectedMs: Milestone,
-  onInvoiceSuccess?: (data:Invoice) => void
+  client_id:        string
+  project_data:     Project
+  preSelectedMs:    Milestone
+  onInvoiceSuccess?: (data: Invoice) => void
 }
 
-// ── Component ──────────────────────────────────────────────────────────────
+// ── Shared field style ───────────────────────────────────────────────────────
 
-export const InvoiceModalForm = ({ client_id, project_data, preSelectedMs }: Props) => {
-  const setOpenModal = useInvoiceStore(state => state.setOpenModal)
-  const openModal = useInvoiceStore(state => state.openModal)
+const fieldSx = {
+  '& .MuiOutlinedInput-root': {
+    fontSize: 13,
+    borderRadius: 1.5,
+    '& fieldset': { borderColor: 'divider' },
+    '&:hover fieldset': { borderColor: 'text.disabled' },
+    '&.Mui-focused fieldset': { borderColor: 'text.primary', borderWidth: 1 },
+  },
+  '& .MuiInputLabel-root': {
+    fontSize: 13,
+    color: 'text.disabled',
+    '&.Mui-focused': { color: 'text.primary' },
+  },
+  '& .MuiFormHelperText-root': { fontSize: 11, mt: 0.5 },
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
+
+export const InvoiceModalForm = ({ client_id, project_data, preSelectedMs, onInvoiceSuccess }: Props) => {
+  const setOpenModal    = useInvoiceStore(state => state.setOpenModal)
+  const openModal       = useInvoiceStore(state => state.openModal)
   const { id: project_id } = useParams()
   const { mutate: createInvoice, isPending } = useCreateInvoice(client_id, project_id)
   const { mutate: updateMs } = useUpdateMilestoneStatus()
 
-  const {
-    register, control, handleSubmit, watch, reset,
-    formState: { errors },
-  } = useForm<InvoiceFormType>({
+  const { register, control, handleSubmit, watch, reset, formState: { errors } } = useForm<InvoiceFormType>({
     resolver: zodResolver(InvoiceSchema),
     defaultValues: {
       milestone_id: preSelectedMs?.id,
-      due_date: '',
-      notes: '',
-      items: [{ description: preSelectedMs?.title, amount: preSelectedMs?.amount }],
+      due_date:     '',
+      notes:        '',
+      items:        [{ description: preSelectedMs?.title, amount: preSelectedMs?.amount }],
     },
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'items' })
 
-  // re-fill if milestone changes
   useEffect(() => {
     reset({
       milestone_id: preSelectedMs.id,
-      due_date: '',
-      notes: '',
-      items: [{ description: preSelectedMs.title, amount: preSelectedMs.amount }],
+      due_date:     '',
+      notes:        '',
+      items:        [{ description: preSelectedMs.title, amount: preSelectedMs.amount }],
     })
   }, [preSelectedMs.id])
 
-  // live calculations
   const watchedItems = watch('items')
   const subtotal = watchedItems?.reduce((sum, item) => sum + (Number(item.amount) || 0), 0) ?? 0
-  const tax = Math.round(subtotal * TAX_RATE)
-  const total = subtotal + tax
+  const tax      = Math.round(subtotal * TAX_RATE)
+  const total    = subtotal + tax
 
-  const handleClose = () => {
-    setOpenModal(false)
-    reset()
-  }
+  const handleClose = () => { setOpenModal(false); reset() }
 
   const onSubmit = (data: InvoiceFormType) => {
-    createInvoice({
-      ...data,
-      subtotal,
-      tax,
-      total,
-    }, {
+    createInvoice({ ...data, subtotal, tax, total }, {
       onSuccess: (data) => {
-        updateMs({ milestoneId: preSelectedMs.id, status: 'invoiced', invoiceId: data.id })
-        handleClose()
+        if (onInvoiceSuccess) {
+          onInvoiceSuccess(data)
+        } else {
+          updateMs({ milestoneId: preSelectedMs.id, status: 'invoiced', invoiceId: data.id })
+          handleClose()
+        }
       },
-      onError: () => toast.error('Error creating invoice.')
+      onError: () => toast.error('Error creating invoice.'),
     })
   }
 
@@ -114,98 +123,149 @@ export const InvoiceModalForm = ({ client_id, project_data, preSelectedMs }: Pro
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
-      slotProps={{ paper: { sx: { borderRadius: 3, overflow: 'scroll' } } }}
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: { xs: 0, sm: 2.5 },
+            m: { xs: 0, sm: 2 },
+            width: { xs: '100%', sm: 'auto' },
+            maxHeight: '100dvh',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+          },
+        },
+      }}
     >
-
-
-      <Box sx={{ px: 3, pt: 3, pb: 2, bgcolor: '#1D9E75' }}>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ReceiptRounded sx={{ color: '#fff', fontSize: 20 }} />
-            </Box>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>
-                Create Invoice
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.75)' }}>
-                Draft will be saved — send later
-              </Typography>
-            </Box>
-          </Box>
-          <IconButton size="small" onClick={handleClose}
-            sx={{ color: 'rgba(255,255,255,0.8)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-            <CloseRounded fontSize="small" />
-          </IconButton>
+      {/* ── Header ─────────────────────────────────────────────────────── */}
+      <Box sx={{
+        px: { xs: 2, sm: 3 }, pt: 2.5, pb: 2,
+        borderBottom: '0.5px solid', borderColor: 'divider',
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+        flexShrink: 0,
+      }}>
+        <Box>
+          <Typography sx={{ fontSize: 15, fontWeight: 500, lineHeight: 1.3 }}>
+            Create invoice
+          </Typography>
+          <Typography sx={{ fontSize: 12, color: 'text.disabled', mt: 0.25 }}>
+            Saved as draft — you can send it later
+          </Typography>
         </Box>
-
-        {/* project + client + milestone pills */}
-        <Box sx={{ display: 'flex', gap: 1, mt: 2, flexWrap: 'wrap' }}>
-          <Chip label={`📁 ${project_data?.title}`} size="small"
-            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: '#fff', fontWeight: 500, fontSize: '0.75rem' }} />
-          <Chip label={`👤 ${project_data?.clients?.name}`} size="small"
-            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: '#fff', fontWeight: 500, fontSize: '0.75rem' }} />
-          <Chip label={`🚩 ${preSelectedMs.title}`} size="small"
-            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: '#fff', fontWeight: 500, fontSize: '0.75rem' }} />
-        </Box>
+        <IconButton size="small" onClick={handleClose} sx={{ color: 'text.disabled', mt: 0.25 }}>
+          <CloseRounded sx={{ fontSize: 16 }} />
+        </IconButton>
       </Box>
 
+      {/* ── Context strip ──────────────────────────────────────────────── */}
+      <Box sx={{
+        px: { xs: 2, sm: 3 }, py: 1.25,
+        bgcolor: 'action.hover',
+        borderBottom: '0.5px solid', borderColor: 'divider',
+        display: 'flex', gap: 2, flexWrap: 'wrap',
+        flexShrink: 0,
+      }}>
+        {[
+          { icon: <FolderOpenOutlined sx={{ fontSize: 13 }} />,      label: project_data?.title },
+          { icon: <PersonOutlineOutlined sx={{ fontSize: 13 }} />,   label: project_data?.clients?.name },
+          { icon: <FlagOutlined sx={{ fontSize: 13 }} />,            label: preSelectedMs.title },
+        ].map(({ icon, label }) => label && (
+          <Box key={label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Box sx={{ color: 'text.disabled' }}>{icon}</Box>
+            <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>{label}</Typography>
+          </Box>
+        ))}
+      </Box>
 
-      <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ display: 'flex', flexDirection: 'column' }}>
-        <DialogContent sx={{ px: 3, py: 2.5, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+      {/* ── Scrollable form body ────────────────────────────────────────── */}
+      <Box
+        component="form"
+        id="invoice-form"
+        onSubmit={handleSubmit(onSubmit)}
+        sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto' }}
+      >
+        <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: 2.5, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
 
-
+          {/* Due date */}
           <Box>
-            <Typography variant="caption" color="text.secondary"
-              sx={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
-              Due Date
+            <Typography sx={{ fontSize: 11, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.04em', mb: 0.75 }}>
+              Due date
             </Typography>
             <TextField
-              type="date" fullWidth size="small" sx={{ mt: 0.75 }}
+              type="date" fullWidth size="small"
               error={!!errors.due_date}
               helperText={errors.due_date?.message}
               slotProps={{ inputLabel: { shrink: true } }}
               {...register('due_date')}
+              sx={fieldSx}
             />
           </Box>
 
-          {/* Line Items */}
+          {/* Line items */}
           <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" color="text.secondary"
-                sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Invoice Items
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.25 }}>
+              <Typography sx={{ fontSize: 11, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Invoice items
               </Typography>
               {errors.items?.root && (
-                <Typography variant="caption" color="error">{errors.items.root.message}</Typography>
+                <Typography sx={{ fontSize: 11, color: 'error.main' }}>{errors.items.root.message}</Typography>
               )}
             </Box>
 
-            <Box sx={{ display: 'flex', gap: 1, mb: 0.75, px: 0.5 }}>
-              <Typography variant="caption" color="text.disabled" sx={{ flex: 2 }}>Description</Typography>
-              <Typography variant="caption" color="text.disabled" sx={{ flex: 1 }}>Amount (NPR)</Typography>
-              <Box sx={{ width: 36 }} />
+            {/* Column headers — desktop only */}
+            <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1, mb: 0.75, px: 0.25 }}>
+              <Typography sx={{ fontSize: 11, color: 'text.disabled', flex: 2 }}>Description</Typography>
+              <Typography sx={{ fontSize: 11, color: 'text.disabled', flex: 1 }}>Amount (NPR)</Typography>
+              <Box sx={{ width: 32 }} />
             </Box>
 
             <Stack sx={{ gap: 1 }}>
               {fields.map((field, index) => (
-                <Box key={field.id} sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                <Box
+                  key={field.id}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    gap: 1,
+                    alignItems: { xs: 'stretch', sm: 'flex-start' },
+                  }}
+                >
                   <TextField
                     placeholder="e.g. UI Design, Extra revision"
-                    size="small" sx={{ flex: 2 }}
+                    size="small"
+                    sx={{ flex: 2, ...fieldSx }}
                     error={!!errors.items?.[index]?.description}
                     helperText={errors.items?.[index]?.description?.message}
                     {...register(`items.${index}.description`)}
                   />
                   <TextField
-                    placeholder="0" size="small" type="number" sx={{ flex: 1 }}
+                    placeholder="0"
+                    size="small"
+                    type="number"
+                    sx={{ flex: 1, width: { xs: '100%', sm: 'auto' }, ...fieldSx }}
                     error={!!errors.items?.[index]?.amount}
                     helperText={errors.items?.[index]?.amount?.message}
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>NPR</Typography>
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
                     {...register(`items.${index}.amount`, { valueAsNumber: true })}
                   />
-                  <IconButton size="small" onClick={() => remove(index)}
+                  <IconButton
+                    size="small"
+                    onClick={() => remove(index)}
                     disabled={fields.length === 1}
-                    sx={{ mt: 0.5, color: 'error.main', opacity: fields.length === 1 ? 0.3 : 1 }}>
+                    sx={{
+                      alignSelf: { xs: 'flex-end', sm: 'center' },
+                      color: 'error.main',
+                      opacity: fields.length === 1 ? 0.3 : 1,
+                    }}
+                  >
                     <DeleteOutlineRounded fontSize="small" />
                   </IconButton>
                 </Box>
@@ -213,47 +273,45 @@ export const InvoiceModalForm = ({ client_id, project_data, preSelectedMs }: Pro
             </Stack>
 
             <Button
-              size="small" startIcon={<AddRounded />}
+              size="small"
+              startIcon={<AddRounded />}
               onClick={() => append({ description: '', amount: 0 })}
-              sx={{
-                mt: 1.5, color: 'text.secondary', fontSize: '0.8rem',
-                border: '1px dashed #D1D5DB', borderRadius: 1.5,
-                px: 2, py: 0.75, width: '100%',
-                '&:hover': { borderColor: 'primary.main', color: 'primary.main' },
-              }}
+              sx={{ mt: 1.5, color: 'text.secondary', fontSize: 12, px: 0.5, '&:hover': { color: 'primary.main', bgcolor: 'transparent' } }}
             >
               Add line item
             </Button>
           </Box>
 
-
+          {/* Notes */}
           <Box>
-            <Typography variant="caption" color="text.secondary"
-              sx={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+            <Typography sx={{ fontSize: 11, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.04em', mb: 0.75 }}>
               Notes (optional)
             </Typography>
             <TextField
-              multiline rows={2} fullWidth size="small" sx={{ mt: 0.75 }}
+              multiline rows={2} fullWidth size="small"
               placeholder="Payment instructions, thank you note, etc."
+              sx={fieldSx}
               {...register('notes')}
             />
           </Box>
 
-          {/* Subtotal / Tax / Total breakdown */}
-          <Box sx={{ border: '1px solid #E5E7EB', borderRadius: 2, overflow: 'hidden' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2.5, py: 1.25 }}>
-              <Typography variant="body2" color="text.secondary">Subtotal</Typography>
-              <Typography variant="body2">NPR {subtotal.toLocaleString()}</Typography>
-            </Box>
-            <Divider />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2.5, py: 1.25 }}>
-              <Typography variant="body2" color="text.secondary">VAT (13%)</Typography>
-              <Typography variant="body2">NPR {tax.toLocaleString()}</Typography>
-            </Box>
-            <Divider />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2.5, py: 1.25, bgcolor: '#F8FAF9' }}>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>Total</Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700 }} color="primary.main">
+          {/* Totals summary */}
+          <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+            {[
+              { label: 'Subtotal', value: `NPR ${subtotal.toLocaleString()}`, bold: false },
+              { label: 'VAT (13%)', value: `NPR ${tax.toLocaleString()}`, bold: false },
+            ].map(({ label, value }) => (
+              <Box key={label}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2.5, py: 1.25 }}>
+                  <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>{label}</Typography>
+                  <Typography sx={{ fontSize: 13 }}>{value}</Typography>
+                </Box>
+                <Divider />
+              </Box>
+            ))}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2.5, py: 1.25, bgcolor: 'action.hover' }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 600 }}>Total</Typography>
+              <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'primary.main' }}>
                 NPR {total.toLocaleString()}
               </Typography>
             </Box>
@@ -261,18 +319,32 @@ export const InvoiceModalForm = ({ client_id, project_data, preSelectedMs }: Pro
 
         </DialogContent>
 
-        {/* ── Footer ────────────────────────────────────────────────────── */}
-        <DialogActions sx={{ px: 3, pb: 3, pt: 0, gap: 1 }}>
-          <Button variant="outlined" onClick={handleClose}
-            sx={{ color: 'text.secondary', borderColor: '#E0E0E0', fontWeight: 600 }}>
+        {/* ── Footer ─────────────────────────────────────────────────── */}
+        <DialogActions sx={{
+          px: { xs: 2, sm: 3 }, pb: { xs: 2.5, sm: 3 }, pt: 2,
+          gap: 1,
+          borderTop: '0.5px solid', borderColor: 'divider',
+          flexShrink: 0,
+        }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleClose}
+            sx={{ fontSize: 13, color: 'text.secondary', borderColor: 'divider' }}
+          >
             Cancel
           </Button>
-          <Button type="submit" variant="contained" disabled={isPending}
-            sx={{ fontWeight: 600, minWidth: 130 }}>
+          <Button
+            form="invoice-form"
+            type="submit"
+            variant="contained"
+            size="small"
+            disabled={isPending}
+            sx={{ fontSize: 13, minWidth: 130 }}
+          >
             {isPending
-              ? <CircularProgress size={18} sx={{ color: '#fff' }} />
-              : 'Save as Draft'
-            }
+              ? <CircularProgress size={16} sx={{ color: '#fff' }} />
+              : 'Save as draft'}
           </Button>
         </DialogActions>
       </Box>
