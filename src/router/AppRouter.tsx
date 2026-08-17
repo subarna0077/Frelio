@@ -14,6 +14,8 @@ import { PaymentSuccessPortal } from '../shared/pages/PaymentSuccessPortal'
 import { Settings } from '../features/auth/pages/Settings'
 import { ClientDetail } from '../features/clients/pages/ClientDetail'
 import LandingPage from '../shared/pages/LandingPage'
+import { Billing } from '../features/billing/pages/Billing'
+import { SubscriptionPaymentSuccess } from '../features/billing/pages/SubscriptionPaymentSuccess'
 export const AppRouter = () => {
 
     return (
@@ -48,7 +50,9 @@ export const AppRouter = () => {
 
             <Route path='/clients/:id' element={<ProtectedRoute><AppLayout><ClientDetail/></AppLayout></ProtectedRoute>}></Route>
 
+            <Route path='/billing' element={<ProtectedRoute><AppLayout><Billing/></AppLayout></ProtectedRoute>}></Route>
 
+            <Route path='/billing/payment-success' element={<ProtectedRoute><AppLayout><SubscriptionPaymentSuccess/></AppLayout></ProtectedRoute>}></Route>
 
         </Routes>
 
