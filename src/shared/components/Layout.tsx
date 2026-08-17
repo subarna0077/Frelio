@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import {
   DashboardOutlined, PersonOutlined, FolderOpenOutlined, ReceiptOutlined,
-  SettingsOutlined, MenuRounded, CloseRounded, BoltRounded,
+  SettingsOutlined, MenuRounded, CloseRounded, BoltRounded, WorkspacePremiumOutlined,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../features/auth/stores/authStore';
@@ -19,6 +19,7 @@ const navItems = [
   { label: 'Clients',   icon: <PersonOutlined />,   path: '/clients' },
   { label: 'Projects',  icon: <FolderOpenOutlined />, path: '/projects' },
   { label: 'Invoices',  icon: <ReceiptOutlined />,   path: '/invoices' },
+  { label: 'Billing',   icon: <WorkspacePremiumOutlined />, path: '/billing' },
   { label: 'Settings',  icon: <SettingsOutlined />,  path: '/settings' },
 ];
 

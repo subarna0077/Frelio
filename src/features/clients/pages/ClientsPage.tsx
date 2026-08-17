@@ -20,6 +20,7 @@ import { toast } from 'react-hot-toast';
 import { useWarningDialogStore } from '../../../shared/hooks/useWarningDialogStore';
 import { WarningDialog } from '../../../shared/components/WarningDialog';
 import {useNavigate} from 'react-router-dom'
+import { usePlanLimits } from '../../billing/hooks/usePlanLimits';
 
 
 export const Clients = () => {
@@ -71,6 +72,17 @@ export const Clients = () => {
 
   const onCancel = () => setWarningType('none');
 
+  const { canCreateClient, clientCount, plan } = usePlanLimits();
+
+  const handleAddClient = () => {
+    if (!canCreateClient) {
+      toast.error(`You've reached the ${plan?.max_clients} client limit on the ${plan?.name} plan.`);
+      navigate('/billing');
+      return;
+    }
+    setOpenModal(true);
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       {/* Page header */}
@@ -79,12 +91,13 @@ export const Clients = () => {
           <Typography sx={{ fontSize: 18, fontWeight: 500 }}>Clients</Typography>
           <Typography sx={{ fontSize: 13, color: 'text.secondary', mt: 0.25 }}>
             Manage your client relationships
+            {!!plan?.max_clients && ` · ${clientCount}/${plan.max_clients} clients used on the ${plan.name} plan`}
           </Typography>
         </Box>
         <Button
           variant="contained"
           startIcon={<AddOutlined sx={{ fontSize: 15 }} />}
-          onClick={() => setOpenModal(true)}
+          onClick={handleAddClient}
           sx={{ fontSize: 13 }}
         >
           Add client
@@ -124,7 +137,7 @@ export const Clients = () => {
             <Button
               variant="contained"
               startIcon={<AddOutlined sx={{ fontSize: 15 }} />}
-              onClick={() => setOpenModal(true)}
+              onClick={handleAddClient}
               sx={{ fontSize: 13 }}
             >
               Add client
